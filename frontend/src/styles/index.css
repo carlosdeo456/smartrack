@@ -1,0 +1,441 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Syne', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
+    'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--tw-bg);
+  color: var(--tw-text);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+.leaflet-container {
+  border-radius: 8px;
+  font-family: inherit;
+  height: 100%;
+  width: 100%;
+  z-index: 0;
+}
+
+/* Bolt-style live driver marker (map.html → MapContainer) */
+.bolt-driver-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
+.bolt-driver-inner {
+  position: absolute;
+  inset: 6px;
+  background: #34D399;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 2px 12px rgba(52, 211, 153, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.5s ease;
+}
+
+.bolt-courier-inner {
+  background: #10B981;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.5);
+}
+
+.bolt-driver-emoji {
+  font-size: 18px;
+  line-height: 1;
+  display: block;
+  transform: translateY(-1px);
+}
+
+.bolt-map-flash {
+  box-shadow: 0 0 0 2px rgba(0, 185, 0, 0.6), 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+/* Bolt-style live vehicle marker */
+.bolt-vehicle-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.bolt-vehicle-wrap {
+  position: relative;
+  width: 48px;
+  height: 48px;
+}
+
+.bolt-vehicle-pulse {
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: rgba(52, 211, 153, 0.35);
+  animation: boltPulse 2s ease-out infinite;
+}
+
+.bolt-vehicle {
+  position: absolute;
+  inset: 6px;
+  background: #00b140;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.6s ease;
+}
+
+.bolt-dest-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.bolt-dest-pin {
+  width: 16px;
+  height: 16px;
+  background: #ef4444;
+  border: 3px solid #ffffff;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+  margin-left: 4px;
+}
+
+@keyframes boltPulse {
+  0% { transform: scale(0.8); opacity: 0.8; }
+  70% { transform: scale(1.4); opacity: 0; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+
+/* Live track map — full-screen mobile layout */
+.live-track-map {
+  border-radius: 0 !important;
+}
+
+/* Draggable bottom sheet (Bolt / Uber style) */
+.tracking-bottom-sheet {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: var(--tw-surface);
+  border-radius: 24px 24px 0 0;
+  box-shadow: var(--tw-shadow);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: box-shadow 0.3s ease, background-color 0.2s ease;
+  touch-action: none;
+}
+
+.tracking-bottom-sheet--flash {
+  box-shadow: 0 -4px 0 0 #34D399, 0 -8px 32px rgba(52, 211, 153, 0.25);
+}
+
+.tracking-sheet-handle-zone {
+  flex-shrink: 0;
+  padding: 12px 0 8px;
+  cursor: grab;
+  touch-action: none;
+}
+
+.tracking-sheet-handle-zone:active {
+  cursor: grabbing;
+}
+
+.tracking-sheet-handle {
+  width: 40px;
+  height: 4px;
+  background: var(--tw-border2);
+  border-radius: 999px;
+  margin: 0 auto;
+}
+
+.tracking-sheet-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 20px 24px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tracking-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.tracking-sheet-eta {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--tw-text);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.tracking-live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ecfdf5;
+  color: #059669;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 6px 10px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.tracking-live-pill--offline {
+  background: #fffbeb;
+  color: #d97706;
+}
+
+.tracking-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #34D399;
+  animation: boltPulse 2s ease-out infinite;
+}
+
+.tracking-live-pill--offline .tracking-live-dot {
+  background: #f59e0b;
+  animation: none;
+}
+
+.tracking-progress-track {
+  width: 100%;
+  height: 6px;
+  background: var(--tw-border);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.tracking-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #34D399, #10B981);
+  border-radius: 999px;
+  transition: width 0.7s ease;
+}
+
+.tracking-steps {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  gap: 8px;
+}
+
+.tracking-step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.tracking-step-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--tw-border);
+  background: var(--tw-surface2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.tracking-step--done .tracking-step-dot {
+  background: #34D399;
+  border-color: #34D399;
+}
+
+.tracking-step--active .tracking-step-dot {
+  border-color: #34D399;
+  box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.2);
+}
+
+.tracking-step-label {
+  font-size: 0.6875rem;
+  color: var(--tw-muted);
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.tracking-step--done .tracking-step-label,
+.tracking-step--active .tracking-step-label {
+  color: var(--tw-text);
+  font-weight: 600;
+}
+
+.tracking-courier-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--tw-surface2);
+  border-radius: 16px;
+  margin-bottom: 12px;
+}
+
+.tracking-courier-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #34D399, #10B981);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tracking-courier-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.tracking-courier-name {
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: var(--tw-text);
+  margin-bottom: 2px;
+}
+
+.tracking-courier-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8125rem;
+}
+
+.tracking-stars {
+  color: #fbbf24;
+  font-size: 0.75rem;
+  letter-spacing: -1px;
+}
+
+.tracking-rating-value {
+  color: var(--tw-muted);
+  font-weight: 600;
+}
+
+.tracking-courier-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.tracking-action-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  text-decoration: none;
+}
+
+.tracking-action-btn:active {
+  transform: scale(0.94);
+}
+
+.tracking-action-btn--call {
+  background: var(--tw-surface);
+  color: #34D399;
+  border: 2px solid #34D399;
+}
+
+.tracking-action-btn--message {
+  background: #34D399;
+  color: #ffffff;
+}
+
+.tracking-action-btn--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.tracking-destination {
+  font-size: 0.8125rem;
+  color: var(--tw-muted);
+  text-align: center;
+}
+
+.tracking-destination strong {
+  color: var(--tw-text);
+}
+
+.tracking-number {
+  color: var(--tw-dim);
+}
+
+.map-place-label {
+  background: var(--tw-surface) !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 4px 10px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: var(--tw-text) !important;
+  box-shadow: var(--tw-shadow) !important;
+}
+
+.map-marker {
+  background-color: #3b82f6;
+  border: 2px solid white;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.alert {
+  animation: slideIn 0.3s ease-in-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.sensor-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.sensor-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}

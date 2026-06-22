@@ -1,0 +1,769 @@
+/* TransitWatch design tokens — light default, dark via .dark on <html> */
+:root {
+  --tw-bg: #ffffff;
+  --tw-surface: #ffffff;
+  --tw-surface2: #f0fdf4;
+  --tw-surface3: #ecfdf5;
+  --tw-border: #d1fae5;
+  --tw-border2: #a7f3d0;
+  --tw-text: #064e3b;
+  --tw-muted: #047857;
+  --tw-dim: #6b7280;
+  --tw-accent: #10b981;
+  --tw-accent2: #059669;
+  --tw-red: #ef4444;
+  --tw-red2: #f87171;
+  --tw-amber: #f59e0b;
+  --tw-amber2: #fbbf24;
+  --tw-green: #10b981;
+  --tw-green2: #34d399;
+  --tw-purple: #8b5cf6;
+  --tw-teal: #14b8a6;
+  --tw-font: 'Syne', sans-serif;
+  --tw-mono: 'DM Mono', monospace;
+  --tw-shadow: 0 1px 3px rgba(16, 185, 129, 0.08), 0 4px 12px rgba(16, 185, 129, 0.06);
+  --tw-accent-soft: color-mix(in srgb, var(--tw-accent) 12%, transparent);
+  --tw-accent-muted: color-mix(in srgb, var(--tw-accent) 18%, transparent);
+  --tw-accent-border: color-mix(in srgb, var(--tw-accent) 28%, transparent);
+}
+
+.dark {
+  --tw-bg: #0a0c10;
+  --tw-surface: #111318;
+  --tw-surface2: #191c22;
+  --tw-surface3: #1f232c;
+  --tw-border: #252830;
+  --tw-border2: #2d3240;
+  --tw-text: #e8ecf4;
+  --tw-muted: #8590a8;
+  --tw-dim: #4a5168;
+  --tw-accent: #4f8ef7;
+  --tw-accent2: #6ba5ff;
+  --tw-red: #f25c5c;
+  --tw-red2: #ff7979;
+  --tw-amber: #f2a93b;
+  --tw-amber2: #ffbb5c;
+  --tw-green: #3dca7e;
+  --tw-green2: #5edda0;
+  --tw-purple: #9b72f7;
+  --tw-teal: #38c9c9;
+  --tw-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
+  --tw-accent-soft: color-mix(in srgb, var(--tw-accent) 12%, transparent);
+  --tw-accent-muted: color-mix(in srgb, var(--tw-accent) 18%, transparent);
+  --tw-accent-border: color-mix(in srgb, var(--tw-accent) 28%, transparent);
+}
+
+.transitwatch-app {
+  background: var(--tw-bg);
+  color: var(--tw-text);
+  font-family: var(--tw-font);
+  font-size: 14px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.transitwatch-app .topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 56px;
+  border-bottom: 1px solid var(--tw-border);
+  background: var(--tw-surface);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  flex-shrink: 0;
+}
+
+/* Light mode — green brand header, white text */
+:root:not(.dark) .transitwatch-app .topbar {
+  background: linear-gradient(135deg, #047857 0%, #10b981 100%);
+  border-bottom: none;
+}
+
+:root:not(.dark) .transitwatch-app .logo {
+  color: #ffffff;
+}
+
+:root:not(.dark) .transitwatch-app .logo-sub {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+:root:not(.dark) .transitwatch-app .logo-icon {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+:root:not(.dark) .transitwatch-app .topbar-nav-link {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+:root:not(.dark) .transitwatch-app .topbar-nav-link:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+:root:not(.dark) .transitwatch-app .topbar-nav-link.active {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+:root:not(.dark) .transitwatch-app .topbar-user-name {
+  color: #ffffff;
+}
+
+:root:not(.dark) .transitwatch-app .topbar-user-role {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+:root:not(.dark) .transitwatch-app .icon-btn {
+  border-color: rgba(255, 255, 255, 0.35);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+:root:not(.dark) .transitwatch-app .icon-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+}
+
+.transitwatch-app .logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  font-size: 17px;
+  letter-spacing: -0.5px;
+  color: var(--tw-text);
+  text-decoration: none;
+}
+
+.transitwatch-app .logo-icon {
+  width: 32px;
+  height: 32px;
+  background: var(--tw-accent);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.transitwatch-app .logo-sub {
+  font-size: 11px;
+  color: var(--tw-muted);
+  font-weight: 400;
+  letter-spacing: 0.05em;
+}
+
+.transitwatch-app .topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.transitwatch-app .topbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.transitwatch-app .topbar-nav-link {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tw-muted);
+  text-decoration: none;
+  transition: color 0.15s, background 0.15s;
+}
+
+.transitwatch-app .topbar-nav-link:hover {
+  color: var(--tw-text);
+  background: var(--tw-surface2);
+}
+
+.transitwatch-app .topbar-nav-link.active {
+  color: var(--tw-accent);
+  background: color-mix(in srgb, var(--tw-accent) 12%, transparent);
+}
+
+.transitwatch-app .topbar-user {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.2;
+  padding-right: 4px;
+}
+
+.transitwatch-app .topbar-user-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--tw-text);
+}
+
+.transitwatch-app .topbar-user-role {
+  font-size: 10px;
+  color: var(--tw-muted);
+  text-transform: capitalize;
+  font-family: var(--tw-mono);
+}
+
+@media (max-width: 768px) {
+  .transitwatch-app .topbar-nav {
+    display: none;
+  }
+}
+
+.transitwatch-app .live-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(61, 202, 126, 0.12);
+  border: 1px solid rgba(61, 202, 126, 0.25);
+  color: var(--tw-green2);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+  font-family: var(--tw-mono);
+}
+
+.transitwatch-app .pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--tw-green);
+  animation: tw-pulse 2s infinite;
+}
+
+@keyframes tw-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+.transitwatch-app .icon-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid var(--tw-border2);
+  background: transparent;
+  color: var(--tw-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  text-decoration: none;
+}
+
+.transitwatch-app .icon-btn:hover {
+  background: var(--tw-surface2);
+  color: var(--tw-text);
+}
+
+.transitwatch-app .tw-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr 320px;
+  flex: 1;
+  overflow: hidden;
+  min-height: calc(100vh - 56px);
+}
+
+@media (max-width: 1200px) {
+  .transitwatch-app .tw-layout {
+    grid-template-columns: 220px 1fr;
+  }
+  .transitwatch-app .right-panel { display: none; }
+}
+
+@media (max-width: 768px) {
+  .transitwatch-app .tw-layout {
+    grid-template-columns: 1fr;
+  }
+  .transitwatch-app .sidebar { display: none; }
+}
+
+.transitwatch-app .sidebar {
+  border-right: 1px solid var(--tw-border);
+  background: var(--tw-surface);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.transitwatch-app .sidebar-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 0;
+}
+
+.transitwatch-app .sidebar-theme-section {
+  flex-shrink: 0;
+  padding: 14px 16px 16px;
+  border-top: 1px solid var(--tw-border);
+  background: var(--tw-surface);
+}
+
+.transitwatch-app .theme-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.transitwatch-app .theme-switch-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--tw-border2);
+  background: var(--tw-surface2);
+  color: var(--tw-muted);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--tw-font);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.transitwatch-app .theme-switch-btn:hover {
+  color: var(--tw-text);
+  border-color: var(--tw-accent-border);
+}
+
+.transitwatch-app .theme-switch-btn.active {
+  background: var(--tw-accent-soft);
+  border-color: var(--tw-accent);
+  color: var(--tw-accent2);
+}
+
+.transitwatch-app .theme-switch-btn i {
+  font-size: 11px;
+}
+
+.transitwatch-app .sidebar-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tw-dim);
+  padding: 0 16px 8px;
+}
+
+.transitwatch-app .sidebar-section { margin-bottom: 24px; }
+
+.transitwatch-app .nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  cursor: pointer;
+  color: var(--tw-muted);
+  font-size: 13px;
+  position: relative;
+  text-decoration: none;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  font-family: var(--tw-font);
+  transition: all 0.15s;
+}
+
+.transitwatch-app .nav-item:hover { background: var(--tw-surface2); color: var(--tw-text); }
+
+.transitwatch-app .nav-item.active {
+  background: var(--tw-accent-soft);
+  color: var(--tw-accent2);
+}
+
+.transitwatch-app .nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 3px;
+  background: var(--tw-accent);
+  border-radius: 0 2px 2px 0;
+}
+
+.transitwatch-app .nav-icon { width: 16px; text-align: center; font-size: 14px; }
+
+.transitwatch-app .tw-badge {
+  margin-left: auto;
+  font-size: 10px;
+  font-family: var(--tw-mono);
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.transitwatch-app .badge-red { background: rgba(242, 92, 92, 0.15); color: var(--tw-red2); }
+.transitwatch-app .badge-amber { background: rgba(242, 169, 59, 0.15); color: var(--tw-amber2); }
+.transitwatch-app .badge-blue { background: var(--tw-accent-muted); color: var(--tw-accent2); }
+
+.transitwatch-app .route-item {
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+  border-left: 3px solid transparent;
+  background: none;
+  border-top: none;
+  border-right: none;
+  border-bottom: none;
+  width: 100%;
+  text-align: left;
+  font-family: var(--tw-font);
+}
+
+.transitwatch-app .route-item:hover { background: var(--tw-surface2); }
+.transitwatch-app .route-item.active { border-left-color: var(--tw-accent); background: var(--tw-accent-soft); }
+
+.transitwatch-app .route-name { font-size: 12px; font-weight: 600; color: var(--tw-text); }
+.transitwatch-app .route-meta { font-size: 11px; color: var(--tw-muted); margin-top: 2px; font-family: var(--tw-mono); }
+
+.transitwatch-app .route-status {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  margin-right: 4px;
+}
+
+.transitwatch-app .status-ok { background: var(--tw-green); }
+.transitwatch-app .status-warn { background: var(--tw-amber); }
+.transitwatch-app .status-crit { background: var(--tw-red); }
+
+.transitwatch-app .main {
+  overflow-y: auto;
+  background: var(--tw-bg);
+  padding: 20px 24px;
+}
+
+.transitwatch-app .app-page-main {
+  flex: 1;
+  min-height: calc(100vh - 56px);
+  background: var(--tw-bg);
+}
+
+.transitwatch-app .metrics-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 900px) {
+  .transitwatch-app .metrics-row { grid-template-columns: repeat(2, 1fr); }
+}
+
+.transitwatch-app .metric-card {
+  background: var(--tw-surface);
+  border: 1px solid var(--tw-border);
+  border-radius: 12px;
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--tw-shadow);
+}
+
+.transitwatch-app .metric-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+}
+
+.transitwatch-app .metric-card.red::after { background: var(--tw-red); }
+.transitwatch-app .metric-card.amber::after { background: var(--tw-amber); }
+.transitwatch-app .metric-card.green::after { background: var(--tw-green); }
+.transitwatch-app .metric-card.blue::after { background: var(--tw-accent); }
+
+.transitwatch-app .metric-label {
+  font-size: 11px;
+  color: var(--tw-muted);
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+}
+
+.transitwatch-app .metric-value {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+
+.transitwatch-app .metric-value.red { color: var(--tw-red2); }
+.transitwatch-app .metric-value.amber { color: var(--tw-amber2); }
+.transitwatch-app .metric-value.green { color: var(--tw-green2); }
+.transitwatch-app .metric-value.blue { color: var(--tw-accent2); }
+
+.transitwatch-app .metric-sub {
+  font-size: 11px;
+  color: var(--tw-muted);
+  margin-top: 6px;
+  font-family: var(--tw-mono);
+}
+
+.transitwatch-app .section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.transitwatch-app .section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--tw-text);
+}
+
+.transitwatch-app .section-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.transitwatch-app .filter-btn {
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--tw-border2);
+  background: transparent;
+  color: var(--tw-muted);
+  cursor: pointer;
+  font-family: var(--tw-font);
+  transition: all 0.15s;
+}
+
+.transitwatch-app .filter-btn:hover,
+.transitwatch-app .filter-btn.active {
+  background: var(--tw-surface2);
+  color: var(--tw-text);
+  border-color: var(--tw-accent);
+}
+
+.transitwatch-app .map-panel {
+  background: var(--tw-surface);
+  border: 1px solid var(--tw-border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.transitwatch-app .map-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--tw-border);
+  gap: 12px;
+}
+
+.transitwatch-app .map-header-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.transitwatch-app .map-canvas { position: relative; min-height: 220px; background: var(--tw-surface2); }
+
+.transitwatch-app .tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-family: var(--tw-mono);
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--tw-surface2);
+  color: var(--tw-muted);
+  border: 1px solid var(--tw-border);
+}
+
+.transitwatch-app .alerts-panel {
+  background: var(--tw-surface);
+  border: 1px solid var(--tw-border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.transitwatch-app .alerts-table { width: 100%; border-collapse: collapse; }
+
+.transitwatch-app .alerts-table th {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tw-dim);
+  padding: 10px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--tw-border);
+  background: var(--tw-surface2);
+}
+
+.transitwatch-app .alerts-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--tw-border);
+  vertical-align: middle;
+  font-size: 13px;
+}
+
+.transitwatch-app .alerts-table tr:hover td { background: var(--tw-surface2); }
+.transitwatch-app .alerts-table tr { cursor: pointer; }
+
+.transitwatch-app .severity-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-family: var(--tw-mono);
+  letter-spacing: 0.05em;
+}
+
+.transitwatch-app .sev-critical { background: rgba(242, 92, 92, 0.15); color: var(--tw-red2); border: 1px solid rgba(242, 92, 92, 0.2); }
+.transitwatch-app .sev-warning { background: rgba(242, 169, 59, 0.15); color: var(--tw-amber2); border: 1px solid rgba(242, 169, 59, 0.2); }
+.transitwatch-app .sev-info { background: var(--tw-accent-soft); color: var(--tw-accent2); border: 1px solid var(--tw-accent-border); }
+
+.transitwatch-app .alert-type-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.transitwatch-app .icon-temp { background: rgba(242, 92, 92, 0.1); color: var(--tw-red2); }
+.transitwatch-app .icon-delay { background: rgba(242, 169, 59, 0.1); color: var(--tw-amber2); }
+.transitwatch-app .icon-scan { background: var(--tw-accent-soft); color: var(--tw-accent2); }
+.transitwatch-app .icon-default { background: rgba(155, 114, 247, 0.1); color: var(--tw-purple); }
+
+.transitwatch-app .alert-primary { font-weight: 600; color: var(--tw-text); }
+.transitwatch-app .alert-secondary { font-size: 11px; color: var(--tw-muted); margin-top: 2px; font-family: var(--tw-mono); }
+
+.transitwatch-app .parcel-id {
+  font-family: var(--tw-mono);
+  font-size: 12px;
+  color: var(--tw-accent2);
+  background: var(--tw-accent-soft);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.transitwatch-app .route-tag { font-size: 11px; color: var(--tw-muted); font-family: var(--tw-mono); }
+
+.transitwatch-app .action-btn {
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--tw-border2);
+  background: transparent;
+  color: var(--tw-muted);
+  cursor: pointer;
+  font-family: var(--tw-font);
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.transitwatch-app .action-btn:hover { background: var(--tw-surface3); color: var(--tw-text); }
+
+.transitwatch-app .resolve-btn {
+  background: rgba(61, 202, 126, 0.08);
+  border-color: rgba(61, 202, 126, 0.2);
+  color: var(--tw-green2);
+}
+
+.transitwatch-app .right-panel {
+  border-left: 1px solid var(--tw-border);
+  background: var(--tw-surface);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.transitwatch-app .panel-section {
+  padding: 16px;
+  border-bottom: 1px solid var(--tw-border);
+}
+
+.transitwatch-app .panel-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tw-dim);
+  margin-bottom: 12px;
+}
+
+.transitwatch-app .vehicle-card {
+  background: var(--tw-surface2);
+  border: 1px solid var(--tw-border);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-decoration: none;
+  display: block;
+  color: inherit;
+}
+
+.transitwatch-app .vehicle-card:hover { border-color: var(--tw-border2); background: var(--tw-surface3); }
+
+.transitwatch-app .vehicle-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.transitwatch-app .vehicle-id { font-size: 12px; font-weight: 700; font-family: var(--tw-mono); color: var(--tw-accent2); }
+.transitwatch-app .vehicle-status { font-size: 10px; font-family: var(--tw-mono); }
+
+.transitwatch-app .progress-bar {
+  height: 4px;
+  background: var(--tw-border2);
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 6px 0;
+}
+
+.transitwatch-app .progress-fill { height: 100%; border-radius: 2px; }
+.transitwatch-app .progress-ok { background: linear-gradient(90deg, var(--tw-green), var(--tw-teal)); }
+.transitwatch-app .progress-warn { background: linear-gradient(90deg, var(--tw-amber), var(--tw-amber2)); }
+
+.transitwatch-app .vehicle-meta { font-size: 10px; color: var(--tw-muted); font-family: var(--tw-mono); }
+
+.transitwatch-app .feed-item {
+  display: flex;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--tw-border);
+}
+
+.transitwatch-app .feed-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.transitwatch-app .feed-msg { font-size: 12px; color: var(--tw-text); line-height: 1.4; }
+.transitwatch-app .feed-time { font-size: 10px; color: var(--tw-dim); margin-top: 3px; font-family: var(--tw-mono); }
+
+.transitwatch-app .critical-blink { animation: tw-blink 1.5s infinite; }
+
+@keyframes tw-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.transitwatch-app .fleet-compact .leaflet-container { border-radius: 0; }
+.transitwatch-app .fleet-compact > div { height: 220px !important; min-height: 220px !important; border: none; border-radius: 0; }

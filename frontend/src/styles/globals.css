@@ -1,0 +1,49 @@
+﻿/* Global styles */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --primary: #3b82f6;
+  --primary-dark: #1e40af;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --gray-50: #f9fafb;
+  --gray-900: #111827;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--gray-50);
+  color: var(--gray-900);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--gray-50);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Selection styling */
+::selection {
+  background-color: var(--primary);
+  color: white;
+}
+
+/* Focus visible */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}

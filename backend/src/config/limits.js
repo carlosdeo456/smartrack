@@ -1,0 +1,6 @@
+module.exports = {
+  TEMPERATURE_MIN: 15,
+  TEMPERATURE_MAX: 25,
+  HUMIDITY_MIN: 30,
+  HUMIDITY_MAX: 70
+};
