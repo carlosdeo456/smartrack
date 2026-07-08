@@ -5,6 +5,7 @@ import TrackingTimeline from './TrackingTimeline';
 
 function estimateEta(shipment) {
   if (shipment?.status === 'delivered') return 'Delivered';
+  if (shipment?.status === 'delayed') return 'Delivery delayed';
   if (shipment?.expected_delivery) {
     const mins = Math.round((new Date(shipment.expected_delivery) - Date.now()) / 60000);
     if (mins <= 0) return 'Arriving soon';
@@ -12,12 +13,15 @@ function estimateEta(shipment) {
     const hours = Math.floor(mins / 60);
     return `Arriving in ~${hours}h ${mins % 60}m`;
   }
+  if (shipment?.status === 'out_for_delivery') return 'Out for delivery';
+  if (shipment?.status === 'dispatched') return 'Dispatched';
   if (shipment?.status === 'in_transit') return 'On the way';
-  return 'Preparing shipment';
+  if (shipment?.status === 'failed') return 'Delivery exception';
+  return 'Awaiting GPS updates';
 }
 
 const TrackingSidebar = ({ shipment, connected }) => {
-  const isLive = shipment?.status === 'in_transit';
+  const isLive = shipment?.status === 'in_transit' || shipment?.status === 'out_for_delivery';
 
   return (
     <div className="tracking-live-sidebar">

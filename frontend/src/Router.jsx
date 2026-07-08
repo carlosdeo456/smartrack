@@ -9,6 +9,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import LiveTrackPage from './pages/LiveTrackPage';
 import LiveMapPage from './pages/LiveMapPage';
+import ItemsDemoPage from './pages/ItemsDemoPage';
 
 const Router = () => {
   return (
@@ -18,6 +19,7 @@ const Router = () => {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/track" element={<LiveTrackPage />} />
         <Route path="/track/:trackingNumber" element={<LiveTrackPage />} />
+        <Route path="/items-demo" element={<ItemsDemoPage />} />
 
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>

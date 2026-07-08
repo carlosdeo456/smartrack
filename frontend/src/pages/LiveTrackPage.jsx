@@ -1,12 +1,19 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { MapContainer } from '../components/features';
+import ShipmentChatPanel from '../components/tracking/ShipmentChatPanel';
 import TrackingSidebar from '../components/tracking/TrackingSidebar';
 import { useLiveTracking } from '../hooks/useLiveTracking';
 import { normalizeTrackingNumber } from '../utils/tracking';
 import { Spinner } from '../components/ui';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
+function isLocationNewer(nextLocation, currentLocation) {
+  const nextTs = nextLocation?.recordedAt ? new Date(nextLocation.recordedAt).getTime() : 0;
+  const currentTs = currentLocation?.recordedAt ? new Date(currentLocation.recordedAt).getTime() : 0;
+  return nextTs >= currentTs;
+}
 
 const LiveTrackPage = () => {
   const { trackingNumber: urlTrackingNumber } = useParams();
@@ -18,7 +25,7 @@ const LiveTrackPage = () => {
   const [shareHint, setShareHint] = useState('');
   const shipmentRef = useRef(null);
 
-  const { connected } = useLiveTracking({
+  const { liveLocation, connected } = useLiveTracking({
     onLocationChange: (data) => {
       if (shipmentRef.current?.id === data.shipmentId) {
         setShipment(prev => ({ ...prev, currentLocation: data }));
@@ -37,6 +44,29 @@ const LiveTrackPage = () => {
       loadShipment(normalized);
     }
   }, [urlTrackingNumber]);
+
+  const refreshLatestTelemetry = useCallback(async (trackingNumber, currentShipment = null) => {
+    const normalized = normalizeTrackingNumber(trackingNumber);
+    if (!normalized) return;
+
+    try {
+      const response = await fetch(`${API_URL}/api/v1/iot/shipments/${encodeURIComponent(normalized)}/latest`);
+      if (!response.ok) return;
+
+      const payload = await response.json();
+      const latestLocation = payload?.data?.location;
+      if (latestLocation?.latitude == null || latestLocation?.longitude == null) return;
+
+      setShipment((prev) => {
+        const base = prev || currentShipment;
+        if (!base) return prev;
+        if (!isLocationNewer(latestLocation, base.currentLocation)) return base;
+        return { ...base, currentLocation: latestLocation };
+      });
+    } catch {
+      // Tracking page should still work with the shipment payload even if telemetry refresh fails.
+    }
+  }, []);
 
   const loadShipment = async (trackingNumber) => {
     const trimmed = normalizeTrackingNumber(trackingNumber);
@@ -59,6 +89,7 @@ const LiveTrackPage = () => {
       const data = await response.json();
       setShipment(data);
       setTrackingInput(data.tracking_number);
+      refreshLatestTelemetry(data.tracking_number, data);
     } catch (err) {
       setError(err.message || 'Unable to load tracking data');
       setShipment(null);
@@ -66,6 +97,16 @@ const LiveTrackPage = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!shipment?.tracking_number) return undefined;
+
+    const intervalId = setInterval(() => {
+      refreshLatestTelemetry(shipment.tracking_number);
+    }, 15000);
+
+    return () => clearInterval(intervalId);
+  }, [shipment?.tracking_number, refreshLatestTelemetry]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -145,7 +186,7 @@ const LiveTrackPage = () => {
             </div>
             <div className="tracking-feature">
               <strong>Status updates</strong>
-              <span>Processing → In transit → Delivered</span>
+              <span>In transit → Delivered</span>
             </div>
             <div className="tracking-feature">
               <strong>Mobile friendly</strong>
@@ -192,8 +233,8 @@ const LiveTrackPage = () => {
         </div>
       ) : shipment ? (
         <div className="tracking-live-layout">
-          <TrackingSidebar shipment={shipment} connected={connected} />
-          <div className="tracking-live-map">
+          <TrackingSidebar shipment={{ ...shipment, currentLocation: liveLocation || shipment.currentLocation }} connected={connected} />
+          <div className="tracking-live-map flex flex-col min-h-0">
             <div className="tracking-mobile-bar md:hidden">
               <button
                 type="button"
@@ -215,13 +256,18 @@ const LiveTrackPage = () => {
                 </button>
               </form>
             </div>
-            <MapContainer
-              selectedShipment={shipment}
-              liveLocation={shipment.currentLocation}
-              connected={connected}
-              fullScreen
-              showTrackingSheet
-            />
+            <div className="flex-1 min-h-[45vh] relative">
+              <MapContainer
+                key={shipment.tracking_number}
+                selectedShipment={{ ...shipment, currentLocation: liveLocation || shipment.currentLocation }}
+                liveLocation={liveLocation || shipment.currentLocation}
+                connected={connected}
+                fullScreen
+                showTrackingSheet
+                gpsOnly
+              />
+            </div>
+            <ShipmentChatPanel shipment={shipment} />
           </div>
         </div>
       ) : null}

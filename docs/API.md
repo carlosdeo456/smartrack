@@ -24,6 +24,17 @@
 - `POST /api/sensors/data` - Submit sensor data
 - `GET /api/sensors/:shipmentId/latest` - Get latest sensor reading
 
+### IoT v1
+- `GET /api/v1/iot/health` - Check IoT API availability
+- `POST /api/v1/iot/telemetry` - Submit sensor and/or location telemetry
+- `POST /api/v1/iot/shipments/:shipmentId/sensors` - Submit sensor-only data
+- `POST /api/v1/iot/shipments/:shipmentId/location` - Submit location-only data
+- `GET /api/v1/iot/shipments/:shipmentId/latest` - Get latest sensor + location snapshot
+
+### Legacy IoT GPS
+- `POST /api/iot/gps` - Device-compatible GPS + sensor ingest
+- `GET /api/iot/gps/latest?trackingNumber=...` - Latest GPS + sensor snapshot
+
 ### RFID
 - `POST /api/rfid/scan` - Register RFID scan
 - `GET /api/rfid/:shipmentId/history` - Get scan history
@@ -138,6 +149,44 @@ Authorization: Bearer {JWT_TOKEN}
   "latitude": 40.7128,
   "longitude": -74.0060,
   "rfid_tag": "TAG-12345"
+}
+```
+
+**IoT v1 telemetry example:**
+```bash
+POST http://localhost:5000/api/v1/iot/telemetry
+Content-Type: application/json
+X-IoT-Api-Key: your-device-key
+
+{
+  "shipmentId": 1,
+  "deviceId": "ESP32-01",
+  "temperature": 22.5,
+  "humidity": 65,
+  "pressure": 1013.25,
+  "latitude": 40.7128,
+  "longitude": -74.0060,
+  "accuracy": 5,
+  "speed": 25
+}
+```
+
+If `IOT_API_KEY` is set in `backend/.env`, send it through either `X-IoT-Api-Key` or `Authorization: Bearer <key>`.
+
+**Legacy GPS example (works with tracking number references):**
+```bash
+POST http://localhost:5000/api/iot/gps
+Content-Type: application/json
+
+{
+  "shipmentId": "ST-1-UFYMX8",
+  "deviceId": "DEVICE-001",
+  "temperature": 24.5,
+  "humidity": 63,
+  "latitude": -6.7924,
+  "longitude": 39.2083,
+  "accuracy": 5,
+  "speed": 18
 }
 ```
 

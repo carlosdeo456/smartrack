@@ -11,12 +11,12 @@ function formatLocation(row) {
   };
 }
 
-async function saveLocation(shipmentId, { latitude, longitude, altitude, accuracy, speed }) {
+async function saveLocation(shipmentId, { latitude, longitude, altitude, accuracy, speed }, source = 'manual') {
   const result = await pool.query(
-    `INSERT INTO gps_locations (shipment_id, latitude, longitude, altitude, accuracy, speed, recorded_at)
-     VALUES ($1, $2, $3, $4, $5, $6, NOW())
+    `INSERT INTO gps_locations (shipment_id, latitude, longitude, altitude, accuracy, speed, source, recorded_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
      RETURNING *`,
-    [shipmentId, latitude, longitude, altitude ?? null, accuracy ?? null, speed ?? null]
+    [shipmentId, latitude, longitude, altitude ?? null, accuracy ?? null, speed ?? null, source]
   );
 
   return formatLocation(result.rows[0]);

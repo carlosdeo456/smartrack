@@ -226,6 +226,8 @@
   position: relative;
   min-height: calc(100vh - 68px);
   background: #e5e7eb;
+  display: flex;
+  flex-direction: column;
 }
 
 @media (max-width: 900px) {

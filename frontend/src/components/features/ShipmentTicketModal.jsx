@@ -1,50 +1,54 @@
 import React, { useState, useEffect } from 'react';
-
 import PropTypes from 'prop-types';
-
 import { Modal, Button } from '../ui';
-
 import { apiFetch } from '../../services/api';
-
 import {
-
   downloadShipmentTickets,
-
   printShipmentTickets,
-
   publishShipmentTicket,
-
   getTrackUrl,
-
   getShipmentQrDataUrl,
-
+  calculateShipmentPrice,
+  formatTsh,
   buildSmsBody,
-
   openSmsToPhone,
-
 } from '../../utils/shipmentTicket';
+import { assignGpsDevice, fetchDeviceAssignment } from '../../utils/gpsDevice';
+import GpsDeviceAssignField from './GpsDeviceAssignField';
 
-
-
-const ShipmentTicketModal = ({ shipment, onClose }) => {
-
+const ShipmentTicketModal = ({ shipment, onClose, onAssignmentChange }) => {
   const [publishHint, setPublishHint] = useState('');
-
   const [qrDataUrl, setQrDataUrl] = useState('');
-
   const [smsLoading, setSmsLoading] = useState(false);
-
-
+  const [gpsDeviceId, setGpsDeviceId] = useState('');
+  const [assignedDeviceId, setAssignedDeviceId] = useState(null);
+  const [assignLoading, setAssignLoading] = useState(false);
 
   useEffect(() => {
-
     if (!shipment) return;
-
     const url = getTrackUrl(shipment);
-
     getShipmentQrDataUrl(url).then(setQrDataUrl).catch(() => setQrDataUrl(''));
-
+    setAssignedDeviceId(shipment.assignedDeviceId || null);
+    setGpsDeviceId(shipment.assignedDeviceId || '');
   }, [shipment]);
+
+  useEffect(() => {
+    if (!shipment?.id) return undefined;
+    let cancelled = false;
+
+    fetchDeviceAssignment(shipment.id)
+      .then((result) => {
+        if (cancelled) return;
+        const deviceId = result?.data?.deviceId || null;
+        setAssignedDeviceId(deviceId);
+        setGpsDeviceId((current) => current || deviceId || '');
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [shipment?.id]);
 
 
 
@@ -57,6 +61,7 @@ const ShipmentTicketModal = ({ shipment, onClose }) => {
   const ticketData = { ...shipment, webUrl: trackUrl };
 
   const smsBody = buildSmsBody(ticketData);
+  const priceLabel = formatTsh(calculateShipmentPrice(shipment.weight));
 
 
 
@@ -91,6 +96,33 @@ const ShipmentTicketModal = ({ shipment, onClose }) => {
   };
 
 
+
+  const handleAssignGps = async () => {
+    const deviceId = gpsDeviceId.trim();
+    if (!deviceId || !shipment?.tracking_number) {
+      setPublishHint('Enter a GPS device ID (e.g. tracker-001)');
+      setTimeout(() => setPublishHint(''), 3000);
+      return;
+    }
+
+    setAssignLoading(true);
+    setPublishHint('');
+    try {
+      const result = await assignGpsDevice({
+        deviceId,
+        trackingNumber: shipment.tracking_number,
+      });
+      const linked = result?.data?.deviceId || deviceId;
+      setAssignedDeviceId(linked);
+      setPublishHint(`GPS tracker ${linked} linked to this shipment`);
+      onAssignmentChange?.({ ...shipment, assignedDeviceId: linked });
+      setTimeout(() => setPublishHint(''), 4000);
+    } catch (err) {
+      setPublishHint(err.message || 'Could not assign GPS tracker');
+    } finally {
+      setAssignLoading(false);
+    }
+  };
 
   const handleSmsBoth = async () => {
 
@@ -169,25 +201,22 @@ const ShipmentTicketModal = ({ shipment, onClose }) => {
       size="lg"
 
       footer={
-
         <>
-
           <Button variant="secondary" onClick={onClose}>Close</Button>
-
-          <Button variant="outline" onClick={handleSmsBoth} disabled={smsLoading}>
-
-            {smsLoading ? 'Sending…' : 'Send SMS'}
-
+          <Button
+            variant="outline"
+            onClick={handleAssignGps}
+            disabled={assignLoading || !gpsDeviceId.trim()}
+          >
+            {assignLoading ? 'Linking…' : 'Link GPS tracker'}
           </Button>
-
+          <Button variant="outline" onClick={handleSmsBoth} disabled={smsLoading}>
+            {smsLoading ? 'Sending…' : 'Send SMS'}
+          </Button>
           <Button variant="outline" onClick={handlePrint}>Print</Button>
-
           <Button variant="outline" onClick={handleDownload}>Download</Button>
-
           <Button onClick={handlePublish}>Publish / Share</Button>
-
         </>
-
       }
 
     >
@@ -262,15 +291,23 @@ const ShipmentTicketModal = ({ shipment, onClose }) => {
 
         </p>
 
+        <div className="rounded-lg bg-[var(--tw-surface2)] border border-[var(--tw-border)] p-3 mb-3">
+          <p className="text-xs font-bold uppercase text-[var(--tw-muted)] mb-2">Price</p>
+          <p className="text-lg font-bold text-[var(--tw-text)]">{priceLabel}</p>
+        </div>
+
         <div className="text-xs text-[var(--tw-muted)] space-y-1">
-
-          <p>Status: {shipment.status?.replace('_', ' ')}</p>
-
-          <p>Weight: {shipment.weight != null ? `${shipment.weight} kg` : '—'}</p>
-
           <p>Contents: {shipment.contents || '—'}</p>
 
         </div>
+
+        <GpsDeviceAssignField
+          value={gpsDeviceId}
+          onChange={(e) => setGpsDeviceId(e.target.value)}
+          assignedDeviceId={assignedDeviceId}
+          disabled={assignLoading}
+          hint="Link the ESP before it sends GPS, or use Link GPS tracker below."
+        />
 
       </div>
 
@@ -289,11 +326,9 @@ const ShipmentTicketModal = ({ shipment, onClose }) => {
 
 
 ShipmentTicketModal.propTypes = {
-
   shipment: PropTypes.object,
-
   onClose: PropTypes.func.isRequired,
-
+  onAssignmentChange: PropTypes.func,
 };
 
 

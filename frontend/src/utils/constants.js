@@ -30,6 +30,7 @@ export const SOCKET_EVENTS = {
   DISCONNECT: 'disconnect',
   LOCATION_CHANGE: 'location-change',
   SENSOR_UPDATE: 'sensor-update',
+  SHIPMENT_MESSAGE: 'shipment-message',
   SHIPMENT_UPDATE: 'shipment-update',
   ALERT: 'alert',
   ALERT_TRIGGERED: 'alert-triggered'

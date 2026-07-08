@@ -2,7 +2,6 @@ import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react'
 import PropTypes from 'prop-types';
 import {
   MapContainer as LeafletMap,
-  TileLayer,
   Polyline,
   CircleMarker,
   Circle,
@@ -14,6 +13,10 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Card, Spinner } from '../ui';
 import TrackingBottomSheet from './TrackingBottomSheet';
+import AnimatedVehicleMarker from '../map/AnimatedVehicleMarker';
+import AerialMapLayers from '../map/AerialMapLayers';
+import { getBearing } from '../map/vehicleMarker';
+import { LIVE_AERIAL_ZOOM, LIVE_STREET_ZOOM } from '../../utils/mapTiles';
 
 import { TZ_DEFAULT_CENTER } from '../../utils/tanzaniaRegions';
 
@@ -21,33 +24,6 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 const DEFAULT_CENTER = TZ_DEFAULT_CENTER;
 const MINT = '#34D399';
 const MINT_DARK = '#10B981';
-const OSM_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
-
-function getBearing(from, to) {
-  if (!from || !to) return 0;
-  const lat1 = (from.lat * Math.PI) / 180;
-  const lat2 = (to.lat * Math.PI) / 180;
-  const dLon = ((to.lng - from.lng) * Math.PI) / 180;
-  const y = Math.sin(dLon) * Math.cos(lat2);
-  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
-  return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
-}
-
-function createCourierIcon(heading = 0) {
-  return L.divIcon({
-    className: 'bolt-driver-icon',
-    html: `
-      <div class="bolt-vehicle-wrap">
-        <div class="bolt-vehicle-pulse"></div>
-        <div class="bolt-driver-inner bolt-courier-inner" style="transform: rotate(${Math.round(heading)}deg)">
-          <span class="bolt-driver-emoji" aria-hidden="true">🛵</span>
-        </div>
-      </div>
-    `,
-    iconSize: [48, 48],
-    iconAnchor: [24, 24]
-  });
-}
 
 const destIcon = L.divIcon({
   className: 'bolt-dest-marker',
@@ -56,122 +32,103 @@ const destIcon = L.divIcon({
   iconAnchor: [10, 20]
 });
 
-function useAnimatedPosition(lat, lng, shipmentId, duration = 1800) {
-  const [position, setPosition] = useState(null);
-  const posRef = useRef(null);
+function pointKey(points) {
+  return points.map((p) => `${p.lat.toFixed(5)},${p.lng.toFixed(5)}`).join('|');
+}
+
+function isDefaultCenter(point) {
+  return (
+    Math.abs(point.lat - DEFAULT_CENTER.lat) < 0.001 &&
+    Math.abs(point.lng - DEFAULT_CENTER.lng) < 0.001
+  );
+}
+
+function FitRouteBounds({ points, shipmentId, bottomPadding = 52, followActive = false, aerial = false }) {
+  const map = useMap();
+  const fittedForShipmentRef = useRef(null);
+  const lastKeyRef = useRef('');
 
   useEffect(() => {
-    posRef.current = null;
-    setPosition(null);
+    fittedForShipmentRef.current = null;
+    lastKeyRef.current = '';
   }, [shipmentId]);
 
   useEffect(() => {
-    if (lat == null || lng == null) return;
+    if (points.length === 0) return;
+    if (points.length === 1 && isDefaultCenter(points[0])) return;
 
-    const start = posRef.current || { lat, lng };
-    const startTime = performance.now();
-    let frameId;
+    const key = `${pointKey(points)}|${bottomPadding}`;
+    if (lastKeyRef.current === key) return;
+    if (followActive && fittedForShipmentRef.current === shipmentId) return;
 
-    const animate = (now) => {
-      const t = Math.min((now - startTime) / duration, 1);
-      const ease = 1 - Math.pow(1 - t, 3);
-      const next = {
-        lat: start.lat + (lat - start.lat) * ease,
-        lng: start.lng + (lng - start.lng) * ease
-      };
-      posRef.current = next;
-      setPosition(next);
-      if (t < 1) frameId = requestAnimationFrame(animate);
-    };
+    lastKeyRef.current = key;
+    fittedForShipmentRef.current = shipmentId;
 
-    frameId = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(frameId);
-  }, [lat, lng, duration]);
-
-  return position || (lat != null ? { lat, lng } : null);
-}
-
-function FitRouteBounds({ points, shipmentId, bottomPadding = 52 }) {
-  const map = useMap();
-  const fittedRef = useRef(null);
-
-  useEffect(() => {
-    if (fittedRef.current === shipmentId || points.length === 0) return;
-    fittedRef.current = shipmentId;
-
+    map.invalidateSize();
+    const closeZoom = aerial ? LIVE_AERIAL_ZOOM : LIVE_STREET_ZOOM;
+    const maxZoom = aerial ? 19 : 16;
     if (points.length > 1) {
-      const bounds = L.latLngBounds(points.map(p => [p.lat, p.lng]));
-      map.fitBounds(bounds, { paddingTopLeft: [52, 52], paddingBottomRight: [52, bottomPadding], maxZoom: 16 });
+      const bounds = L.latLngBounds(points.map((p) => [p.lat, p.lng]));
+      map.fitBounds(bounds, {
+        paddingTopLeft: [52, 52],
+        paddingBottomRight: [52, bottomPadding],
+        maxZoom,
+      });
     } else {
-      map.setView([points[0].lat, points[0].lng], 16);
+      map.setView([points[0].lat, points[0].lng], closeZoom);
     }
-  }, [shipmentId, points, map, bottomPadding]);
+  }, [shipmentId, points, map, bottomPadding, followActive, aerial]);
 
   return null;
 }
 
-function MapFollower({ position, active }) {
+function MapResizeObserver() {
   const map = useMap();
+
+  useEffect(() => {
+    const container = map.getContainer();
+    const onResize = () => map.invalidateSize();
+    const observer = new ResizeObserver(onResize);
+    observer.observe(container);
+    onResize();
+    return () => observer.disconnect();
+  }, [map]);
+
+  return null;
+}
+
+function MapFollower({ position, active, aerial = false }) {
+  const map = useMap();
+  const zoomRef = useRef(null);
 
   useEffect(() => {
     if (!active || !position) return;
+    const targetZoom = aerial ? LIVE_AERIAL_ZOOM : map.getZoom();
+    if (zoomRef.current !== targetZoom) {
+      zoomRef.current = targetZoom;
+      map.setView([position.lat, position.lng], targetZoom, { animate: true, duration: 0.85 });
+      return;
+    }
     map.panTo([position.lat, position.lng], { animate: true, duration: 0.85 });
-  }, [position?.lat, position?.lng, active, map]);
+  }, [position?.lat, position?.lng, active, aerial, map]);
+
+  useEffect(() => {
+    zoomRef.current = null;
+  }, [active, aerial]);
 
   return null;
 }
 
-function LiveCourierMarker({ position, bearing, trackingNumber, isLive, accuracy }) {
-  const icon = useMemo(
-    () => createCourierIcon(bearing),
-    [Math.round(bearing / 8)]
-  );
-
-  if (!position) return null;
-
-  return (
-    <>
-      {accuracy != null && accuracy > 0 && (
-        <Circle
-          center={[position.lat, position.lng]}
-          radius={accuracy}
-          pathOptions={{
-            color: MINT,
-            fillColor: MINT,
-            fillOpacity: 0.12,
-            weight: 1.5,
-            dashArray: '4 6'
-          }}
-        />
-      )}
-      <Marker
-        position={[position.lat, position.lng]}
-        icon={icon}
-        zIndexOffset={1000}
-      >
-        <Popup>
-          <span className="font-semibold">{trackingNumber || 'Parcel'}</span>
-          {isLive && (
-            <span className="block text-xs text-green-600 font-bold mt-1">● Live location</span>
-          )}
-          <span className="block text-xs text-gray-500 mt-1 font-mono">
-            {position.lat.toFixed(5)}, {position.lng.toFixed(5)}
-          </span>
-        </Popup>
-      </Marker>
-    </>
-  );
-}
-
-LiveCourierMarker.propTypes = {
-  position: PropTypes.shape({ lat: PropTypes.number, lng: PropTypes.number }),
-  bearing: PropTypes.number,
-  trackingNumber: PropTypes.string,
-  isLive: PropTypes.bool,
-  accuracy: PropTypes.number
-};
-
-const MapView = ({ selectedShipment, liveLocation, isLoading = false, connected = false, fullScreen = false, showTrackingSheet = false }) => {
+const MapView = ({
+  selectedShipment,
+  liveLocation,
+  isLoading = false,
+  connected = false,
+  fullScreen = false,
+  showTrackingSheet = false,
+  gpsOnly = false,
+  aerialView = false
+}) => {
   const [history, setHistory] = useState([]);
   const [plannedRoute, setPlannedRoute] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
@@ -179,6 +136,11 @@ const MapView = ({ selectedShipment, liveLocation, isLoading = false, connected 
   const [accuracy, setAccuracy] = useState(null);
   const [, setClock] = useState(0);
   const [liveFlash, setLiveFlash] = useState(false);
+  const [followPosition, setFollowPosition] = useState(null);
+
+  const handlePositionChange = useCallback((position) => {
+    setFollowPosition(position);
+  }, []);
 
   const isTracking = selectedShipment?.status === 'in_transit';
 
@@ -294,21 +256,49 @@ const MapView = ({ selectedShipment, liveLocation, isLoading = false, connected 
     [plannedRoute]
   );
 
+  useEffect(() => {
+    setFollowPosition(null);
+  }, [selectedShipment?.id]);
+
+  const liveTarget = liveLocation?.shipmentId === selectedShipment?.id ? liveLocation : null;
   const currentLoc = selectedShipment?.currentLocation;
-  const targetLat = traveledPath.length > 0
-    ? traveledPath[traveledPath.length - 1].lat
-    : currentLoc?.latitude ?? null;
-  const targetLng = traveledPath.length > 0
-    ? traveledPath[traveledPath.length - 1].lng
-    : currentLoc?.longitude ?? null;
-  const animatedPosition = useAnimatedPosition(targetLat, targetLng, selectedShipment?.id, 1800);
+  const targetLat = liveTarget?.latitude
+    ?? (traveledPath.length > 0 ? traveledPath[traveledPath.length - 1].lat : currentLoc?.latitude ?? null);
+  const targetLng = liveTarget?.longitude
+    ?? (traveledPath.length > 0 ? traveledPath[traveledPath.length - 1].lng : currentLoc?.longitude ?? null);
 
   const previousPosition = traveledPath.length > 1 ? traveledPath[traveledPath.length - 2] : null;
-  const bearing = getBearing(previousPosition, animatedPosition);
+  const bearing = getBearing(
+    previousPosition,
+    targetLat != null && targetLng != null ? { lat: targetLat, lng: targetLng } : null
+  );
 
-  const pickup = geoOrigin || (traveledPath.length > 0 ? traveledPath[0] : null);
-  const destination = geoDestination || (plannedPath.length > 0 ? plannedPath[plannedPath.length - 1] : null);
-  const mapCenter = animatedPosition || pickup || DEFAULT_CENTER;
+  const hasTrackerLive = Boolean(liveTarget)
+    || Boolean(selectedShipment?.currentLocation?.fromTracker);
+  const isLiveVehicle = isTracking || hasTrackerLive;
+  const followLive = followPosition != null && (isTracking || Boolean(liveTarget) || (fullScreen && hasTrackerLive));
+
+  const vehiclePopupHtml = useMemo(() => {
+    if (targetLat == null || targetLng == null) return '';
+    const lines = [
+      `<span class="font-semibold">${selectedShipment?.tracking_number || 'Parcel'}</span>`,
+    ];
+    if (isLiveVehicle) {
+      lines.push('<span class="block text-xs text-green-600 font-bold mt-1">● Live location</span>');
+    }
+    lines.push(
+      `<span class="block text-xs text-gray-500 mt-1 font-mono">${targetLat.toFixed(5)}, ${targetLng.toFixed(5)}</span>`
+    );
+    return lines.join('');
+  }, [selectedShipment?.tracking_number, isLiveVehicle, targetLat, targetLng]);
+
+  const pickup = gpsOnly
+    ? (traveledPath.length > 0 ? traveledPath[0] : null)
+    : geoOrigin || (traveledPath.length > 0 ? traveledPath[0] : null);
+  const destination = gpsOnly
+    ? null
+    : geoDestination || (plannedPath.length > 0 ? plannedPath[plannedPath.length - 1] : null);
+  const mapCenter = followPosition || pickup || DEFAULT_CENTER;
 
   const routeProgress = selectedShipment?.status === 'delivered'
     ? 100
@@ -316,8 +306,29 @@ const MapView = ({ selectedShipment, liveLocation, isLoading = false, connected 
       ? Math.min(100, Math.round((traveledPath.length / plannedPath.length) * 100))
       : isTracking ? 40 : 0;
 
+  const useAerialView = aerialView || (fullScreen && gpsOnly);
+  const liveZoom = useAerialView ? LIVE_AERIAL_ZOOM : LIVE_STREET_ZOOM;
+
   const mapBottomPadding = fullScreen || showTrackingSheet ? 300 : 52;
   const useBottomSheet = fullScreen || showTrackingSheet;
+
+  const fitPoints = useMemo(() => {
+    if (!gpsOnly && plannedPath.length > 1) return plannedPath;
+    if (traveledPath.length > 0) return traveledPath;
+    if (!gpsOnly && geoOrigin && geoDestination) return [geoOrigin, geoDestination];
+    if (targetLat != null && targetLng != null) return [{ lat: targetLat, lng: targetLng }];
+    if (!gpsOnly && geoOrigin) return [geoOrigin];
+    if (!gpsOnly && geoDestination) return [geoDestination];
+    return [DEFAULT_CENTER];
+  }, [
+    gpsOnly,
+    plannedPath,
+    traveledPath,
+    geoOrigin,
+    geoDestination,
+    targetLat,
+    targetLng,
+  ]);
 
   const timeAgo = useCallback((dateStr) => {
     if (!dateStr) return 'Just now';
@@ -327,11 +338,13 @@ const MapView = ({ selectedShipment, liveLocation, isLoading = false, connected 
     return `${Math.floor(secs / 60)}m ago`;
   }, []);
 
-  const mapHeightClass = fullScreen ? 'h-full min-h-[100dvh]' : 'h-[70vh] min-h-[28rem]';
+  const mapHeightClass = fullScreen ? 'h-full min-h-0' : 'h-[70vh] min-h-[28rem]';
+
+  const mapShellClass = `${mapHeightClass} ${fullScreen ? 'absolute inset-0 rounded-none shadow-none' : ''}`;
 
   if (isLoading) {
     return (
-      <Card className={`${mapHeightClass} flex items-center justify-center`}>
+      <Card className={`${mapShellClass} flex items-center justify-center ${fullScreen ? 'border-0' : ''}`}>
         <Spinner size="lg" />
       </Card>
     );
@@ -339,7 +352,7 @@ const MapView = ({ selectedShipment, liveLocation, isLoading = false, connected 
 
   if (!selectedShipment) {
     return (
-      <Card className={`${mapHeightClass} flex items-center justify-center p-8 text-center`}>
+      <Card className={`${mapShellClass} flex items-center justify-center p-8 text-center ${fullScreen ? 'border-0' : ''}`}>
         <div>
           <p className="text-lg font-bold text-gray-900 mb-2">Select a shipment</p>
           <p className="text-sm text-gray-600">
@@ -351,35 +364,27 @@ const MapView = ({ selectedShipment, liveLocation, isLoading = false, connected 
   }
 
   return (
-    <Card className={`${mapHeightClass} overflow-hidden relative border-0 ${fullScreen ? 'rounded-none shadow-none' : 'shadow-lg'}`}>
+    <Card className={`${mapShellClass} overflow-hidden relative border-0 ${fullScreen ? '' : 'shadow-lg'}`}>
       <LeafletMap
         center={[mapCenter.lat, mapCenter.lng]}
-        zoom={isTracking ? 17 : 14}
-        className={`h-full w-full z-0 ${fullScreen ? 'live-track-map' : ''}`}
+        zoom={isTracking ? liveZoom : useAerialView ? 15 : 14}
+        className={`h-full w-full z-0 ${fullScreen ? 'live-track-map' : ''} ${useAerialView ? 'live-track-map--aerial' : ''}`}
         scrollWheelZoom
         zoomControl={!fullScreen}
       >
-        <TileLayer
-          attribution={OSM_ATTRIBUTION}
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
+        <AerialMapLayers aerial={useAerialView} />
 
+        <MapResizeObserver />
         <FitRouteBounds
-          points={
-            plannedPath.length > 1
-              ? plannedPath
-              : traveledPath.length
-                ? traveledPath
-                : geoOrigin && geoDestination
-                  ? [geoOrigin, geoDestination]
-                  : [mapCenter]
-          }
+          points={fitPoints}
           shipmentId={selectedShipment.id}
           bottomPadding={mapBottomPadding}
+          followActive={isTracking || (gpsOnly && hasTrackerLive)}
+          aerial={useAerialView}
         />
-        <MapFollower position={animatedPosition} active={isTracking} />
+        <MapFollower position={followPosition} active={followLive} aerial={useAerialView} />
 
-        {plannedPath.length > 1 && (
+        {!gpsOnly && plannedPath.length > 1 && (
           <Polyline
             positions={plannedPath.map(p => [p.lat, p.lng])}
             pathOptions={{
@@ -392,16 +397,30 @@ const MapView = ({ selectedShipment, liveLocation, isLoading = false, connected 
         )}
 
         {traveledPath.length > 0 && (
-          <Polyline
-            positions={traveledPath.map(p => [p.lat, p.lng])}
-            pathOptions={{
-              color: MINT,
-              weight: 6,
-              opacity: 1,
-              lineCap: 'round',
-              lineJoin: 'round'
-            }}
-          />
+          <>
+            {useAerialView && (
+              <Polyline
+                positions={traveledPath.map((p) => [p.lat, p.lng])}
+                pathOptions={{
+                  color: '#ffffff',
+                  weight: 10,
+                  opacity: 0.85,
+                  lineCap: 'round',
+                  lineJoin: 'round',
+                }}
+              />
+            )}
+            <Polyline
+              positions={traveledPath.map(p => [p.lat, p.lng])}
+              pathOptions={{
+                color: useAerialView ? '#22d3ee' : MINT,
+                weight: useAerialView ? 5 : 6,
+                opacity: 1,
+                lineCap: 'round',
+                lineJoin: 'round'
+              }}
+            />
+          </>
         )}
 
         {pickup && (
@@ -416,7 +435,7 @@ const MapView = ({ selectedShipment, liveLocation, isLoading = false, connected 
             }}
           >
             <Popup>
-              Pickup · {selectedShipment.origin_location || 'Origin'}
+              {gpsOnly ? 'First GPS point' : `Pickup · ${selectedShipment.origin_location || 'Origin'}`}
             </Popup>
           </CircleMarker>
         )}
@@ -429,13 +448,34 @@ const MapView = ({ selectedShipment, liveLocation, isLoading = false, connected 
           </Marker>
         )}
 
-        <LiveCourierMarker
-          position={animatedPosition}
-          bearing={bearing}
-          trackingNumber={selectedShipment.tracking_number}
-          isLive={isTracking && connected}
-          accuracy={accuracy}
-        />
+        {targetLat != null && targetLng != null && (
+          <>
+            {accuracy != null && accuracy > 0 && followPosition && (
+              <Circle
+                center={[followPosition.lat, followPosition.lng]}
+                radius={accuracy}
+                pathOptions={{
+                  color: MINT,
+                  fillColor: MINT,
+                  fillOpacity: 0.12,
+                  weight: 1.5,
+                  dashArray: '4 6'
+                }}
+              />
+            )}
+            <AnimatedVehicleMarker
+              lat={targetLat}
+              lng={targetLng}
+              markerKey={selectedShipment.id}
+              heading={bearing}
+              isLive={isLiveVehicle}
+              aerial={useAerialView}
+              duration={isLiveVehicle ? 1600 : 1200}
+              popupHtml={vehiclePopupHtml}
+              onPositionChange={handlePositionChange}
+            />
+          </>
+        )}
       </LeafletMap>
 
       {useBottomSheet ? (
@@ -472,7 +512,7 @@ const MapView = ({ selectedShipment, liveLocation, isLoading = false, connected 
             </div>
           )}
 
-          {selectedShipment && animatedPosition && (
+          {selectedShipment && followPosition && (
             <div className="absolute bottom-4 left-4 right-4 z-[1000] pointer-events-none">
               <div className={`bg-white text-gray-900 rounded-2xl shadow-xl px-4 py-3 transition-shadow duration-300 border border-gray-100 ${liveFlash ? 'tracking-bottom-sheet--flash' : ''}`}>
                 <div className="flex justify-between items-center mb-2">
@@ -515,7 +555,9 @@ MapView.propTypes = {
   isLoading: PropTypes.bool,
   connected: PropTypes.bool,
   fullScreen: PropTypes.bool,
-  showTrackingSheet: PropTypes.bool
+  showTrackingSheet: PropTypes.bool,
+  gpsOnly: PropTypes.bool,
+  aerialView: PropTypes.bool
 };
 
 export default MapView;

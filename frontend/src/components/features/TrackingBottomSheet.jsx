@@ -4,8 +4,9 @@ import PropTypes from 'prop-types';
 const SNAP = { collapsed: 22, default: 33, expanded: 55 };
 
 function getStepState(status) {
-  if (status === 'delivered') return { active: 2, completed: [0, 1, 2] };
-  if (status === 'in_transit') return { active: 1, completed: [0] };
+  if (status === 'delivered') return { active: 1, completed: [0, 1] };
+  if (status === 'failed') return { active: 0, completed: [] };
+  if (status === 'in_transit') return { active: 0, completed: [] };
   return { active: 0, completed: [] };
 }
 
@@ -30,8 +31,7 @@ function getInitials(name) {
 }
 
 const STEPS = [
-  { key: 'picked_up', label: 'Picked up' },
-  { key: 'on_the_way', label: 'On the way' },
+  { key: 'on_the_way', label: 'In transit' },
   { key: 'delivered', label: 'Delivered' }
 ];
 
@@ -87,9 +87,11 @@ const TrackingBottomSheet = ({
 
   const headline = shipment?.status === 'delivered'
     ? 'Delivered'
+    : shipment?.status === 'failed'
+      ? 'Delivery exception'
     : isTracking
       ? `Arriving in ${etaMinutes} min`
-      : `Estimated ${etaMinutes} min`;
+      : 'Awaiting GPS updates';
 
   return (
     <div
@@ -203,6 +205,13 @@ const TrackingBottomSheet = ({
             <span className="tracking-number"> · {shipment.tracking_number}</span>
           )}
         </p>
+
+        {shipment?.currentLocation?.latitude != null && shipment?.currentLocation?.longitude != null && (
+          <p className="text-xs text-gray-500 mt-2">
+            Current GPS: {Number(shipment.currentLocation.latitude).toFixed(5)},{' '}
+            {Number(shipment.currentLocation.longitude).toFixed(5)}
+          </p>
+        )}
       </div>
     </div>
   );

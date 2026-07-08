@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { LiveFleetMap, CreateShipmentModal, ShipmentTicketModal } from '../components/features';
 import TransitAlertsTable from '../components/transitwatch/TransitAlertsTable';
@@ -9,6 +9,8 @@ import { useLiveTracking } from '../hooks/useLiveTracking';
 import { apiFetch } from '../services/api';
 
 import { regionLabel } from '../utils/tanzaniaRegions';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 function routeKey(s) {
   return `${s.origin_location} → ${s.destination_location}`;
@@ -50,11 +52,6 @@ const DashboardPage = () => {
     return () => clearInterval(id);
   }, []);
 
-  useEffect(() => {
-    fetchShipments();
-    fetchAlerts();
-  }, []);
-
   const fetchAlerts = async () => {
     try {
       setAlerts(await apiFetch('/api/alerts?resolved=false'));
@@ -63,17 +60,30 @@ const DashboardPage = () => {
     }
   };
 
-  const fetchShipments = async () => {
-    setLoading(true);
+  const fetchShipments = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/shipments`);
+      const res = await fetch(`${API_URL}/api/shipments`);
       if (res.ok) setShipments(await res.json());
     } catch (err) {
       console.error(err);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchShipments();
+    fetchAlerts();
+  }, [fetchShipments]);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      fetchShipments({ silent: true });
+    }, 15000);
+
+    return () => clearInterval(intervalId);
+  }, [fetchShipments]);
 
   const metrics = useMemo(() => {
     const critical = alerts.filter(a => a.severity === 'critical' || a.severity === 'high').length;
@@ -100,6 +110,28 @@ const DashboardPage = () => {
     });
     return [...map.values()];
   }, [shipments, alerts]);
+
+  const latestGpsLocation = useMemo(() => {
+    const candidates = shipments
+      .filter((shipment) => shipment.currentLocation?.latitude != null && shipment.currentLocation?.longitude != null)
+      .map((shipment) => ({
+        trackingNumber: shipment.tracking_number,
+        ...shipment.currentLocation,
+      }));
+
+    if (liveLocation?.latitude != null && liveLocation?.longitude != null) {
+      candidates.unshift({
+        trackingNumber: shipments.find((shipment) => shipment.id === liveLocation.shipmentId)?.tracking_number,
+        ...liveLocation,
+      });
+    }
+
+    if (candidates.length === 0) return null;
+
+    return candidates.sort(
+      (a, b) => new Date(b.recordedAt || 0).getTime() - new Date(a.recordedAt || 0).getTime()
+    )[0];
+  }, [shipments, liveLocation]);
 
   const routeStatus = (count) => {
     if (count >= 2) return 'status-crit';
@@ -206,6 +238,12 @@ const DashboardPage = () => {
                   <span>{connected ? `LIVE · ${clock}` : `RECONNECTING · ${clock}`}</span>
                 </span>
                 <span className="tag"><i className="fas fa-satellite-dish" /> GPS {connected ? 'LIVE' : '…'}</span>
+                {latestGpsLocation && (
+                  <span className="tag" title={latestGpsLocation.trackingNumber || 'Latest GPS point'}>
+                    <i className="fas fa-location-arrow" /> {latestGpsLocation.latitude.toFixed(4)},{' '}
+                    {latestGpsLocation.longitude.toFixed(4)}
+                  </span>
+                )}
               </div>
             </div>
             <div className="map-canvas fleet-compact">
@@ -251,6 +289,12 @@ const DashboardPage = () => {
       <ShipmentTicketModal
         shipment={ticketShipment}
         onClose={() => setTicketShipment(null)}
+        onAssignmentChange={(updated) => {
+          setShipments((prev) =>
+            prev.map((s) => (s.id === updated.id ? { ...s, ...updated } : s))
+          );
+          setTicketShipment(updated);
+        }}
       />
     </>
   );

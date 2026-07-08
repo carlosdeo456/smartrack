@@ -2,6 +2,15 @@
 
 ## Quick Start
 
+### Server PC only
+
+The backend and PostgreSQL must run on the **server PC** only. In your current LAN setup, that machine is:
+
+- **Server PC:** `192.168.1.32`
+- **Role:** runs Node/Express backend + PostgreSQL and stores all GPS data
+
+Do **not** edit backend DB credentials on a different laptop and expect the ESP to use them. The ESP and all clients should talk to the backend running on the server PC.
+
 ### Prerequisites
 - Node.js 16+ & npm
 - PostgreSQL 12+
@@ -16,10 +25,10 @@ npm install
 npm run setup
 ```
 
-Edit `backend/.env` with your PostgreSQL credentials, then:
+Edit `backend/.env` on the **server PC** with the PostgreSQL username/password from that same machine, then:
 
 ```bash
-npm run migrate
+npm run db:setup
 npm run dev
 ```
 
@@ -37,8 +46,8 @@ This starts both services:
 cd backend
 npm install
 cp .env.example .env
-# Edit .env and add your configurations
-npm run migrate
+# Edit .env on the server PC and add that PC's PostgreSQL credentials
+npm run db:setup
 npm run dev
 ```
 
@@ -59,7 +68,7 @@ Create a PostgreSQL database and apply the schema:
 createdb smartrack
 
 # Apply schema via npm (from project root)
-npm run migrate
+npm run db:setup
 
 # Or load schema directly with psql
 psql smartrack < database/schema.sql
@@ -95,6 +104,8 @@ REACT_APP_SOCKET_URL=http://localhost:5000
 | `npm run dev` | Start backend + frontend concurrently |
 | `npm run dev:backend` | Start backend only |
 | `npm run dev:frontend` | Start frontend only |
+| `npm run db:setup` | Apply backend database schema |
+| `npm run db:setup:win` | Windows alias for database schema setup |
 | `npm run migrate` | Apply database schema |
 
 ---
@@ -117,10 +128,28 @@ REACT_APP_SOCKET_URL=http://localhost:5000
 ```
 
 ### Upload Code
-1. Open `iot-device/smartrack_device.ino` in Arduino IDE
-2. Select board and COM port
-3. Upload sketch
-4. Monitor serial output
+1. Create a shipment in SmartTrack on the **server PC** and note the real tracking number.
+2. Open `iot-device/smartrack_device.ino` in Arduino IDE.
+3. Set `TRACKING_NUMBER` to that real value, for example `ST-1-UFYMX8`.
+4. Select board and COM port.
+5. Upload the sketch.
+6. Monitor serial output or your Wi-Fi bridge logs.
+
+Success means the sender posts to the backend on the server PC and receives a `201` response from:
+
+```text
+http://192.168.1.32:5000/api/iot/gps
+```
+
+If you see `Shipment not found`, the tracking number in the sketch does not match a shipment in the server database.
+
+### Machine roles
+
+| Machine | Role |
+|---------|------|
+| `192.168.1.32` | Server PC: backend + PostgreSQL, stores all GPS data |
+| Your laptop / dev PC | Upload Arduino code, frontend/backend development if needed |
+| ESP8266 / GPS device | Sends GPS data to `192.168.1.32:5000` only |
 
 ---
 

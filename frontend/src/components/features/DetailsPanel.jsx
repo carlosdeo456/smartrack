@@ -3,6 +3,19 @@ import PropTypes from 'prop-types';
 import { Card } from '../ui';
 import StatusBadge from './StatusBadge';
 
+function processMessage(shipment) {
+  if (shipment.status === 'delivered') {
+    return `Parcel delivered to ${shipment.destination_location}.`;
+  }
+  if (shipment.status === 'in_transit') {
+    return `Parcel is currently on transit to ${shipment.destination_location}.`;
+  }
+  if (shipment.status === 'failed') {
+    return 'Delivery hit an exception and needs attention.';
+  }
+  return 'Shipment was created successfully and is currently being processed.';
+}
+
 const DetailsPanel = ({ shipment }) => {
   if (!shipment) {
     return (
@@ -30,6 +43,9 @@ const DetailsPanel = ({ shipment }) => {
           <div className="mt-1">
             <StatusBadge status={shipment.status} />
           </div>
+          <p className="text-xs text-gray-500 mt-2">
+            {processMessage(shipment)}
+          </p>
         </div>
         <div>
           <p className="text-gray-600 text-sm">Expected Delivery</p>

@@ -22,10 +22,11 @@ CREATE TABLE IF NOT EXISTS shipments (
   destination_location VARCHAR(255) NOT NULL,
   sender_id INT REFERENCES users(id),
   driver_id INT REFERENCES users(id),
-  status VARCHAR(50) NOT NULL CHECK (status IN ('pending', 'in_transit', 'delivered', 'failed')),
+  status VARCHAR(50) NOT NULL CHECK (status IN ('pending', 'dispatched', 'in_transit', 'out_for_delivery', 'delayed', 'delivered', 'failed')),
   weight DECIMAL(10, 2),
   dimensions VARCHAR(100),
   contents TEXT,
+  carrier_name VARCHAR(255),
   sender_name VARCHAR(255),
   recipient_name VARCHAR(255),
   sender_phone VARCHAR(20),
@@ -41,6 +42,16 @@ CREATE TABLE IF NOT EXISTS shipments (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+ALTER TABLE shipments
+  ADD COLUMN IF NOT EXISTS carrier_name VARCHAR(255);
+
+ALTER TABLE shipments
+  DROP CONSTRAINT IF EXISTS shipments_status_check;
+
+ALTER TABLE shipments
+  ADD CONSTRAINT shipments_status_check
+  CHECK (status IN ('pending', 'dispatched', 'in_transit', 'out_for_delivery', 'delayed', 'delivered', 'failed'));
+
 -- GPS Locations Table
 CREATE TABLE IF NOT EXISTS gps_locations (
   id SERIAL PRIMARY KEY,
@@ -50,7 +61,18 @@ CREATE TABLE IF NOT EXISTS gps_locations (
   altitude DECIMAL(10, 2),
   accuracy DECIMAL(10, 2),
   speed DECIMAL(10, 2),
+  source VARCHAR(20) DEFAULT 'tracker',
   recorded_at TIMESTAMP NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Active IoT device assignment to shipments
+CREATE TABLE IF NOT EXISTS iot_device_assignments (
+  id SERIAL PRIMARY KEY,
+  device_id VARCHAR(100) NOT NULL,
+  shipment_id INT NOT NULL REFERENCES shipments(id) ON DELETE CASCADE,
+  assigned_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  unassigned_at TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -106,6 +128,35 @@ CREATE TABLE IF NOT EXISTS notifications (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS notification_logs (
+  id SERIAL PRIMARY KEY,
+  shipment_id INT REFERENCES shipments(id) ON DELETE CASCADE,
+  event_type VARCHAR(100) NOT NULL,
+  channel VARCHAR(30) NOT NULL,
+  recipient_role VARCHAR(30) NOT NULL,
+  recipient_phone VARCHAR(30),
+  message_body TEXT NOT NULL,
+  provider_name VARCHAR(100) NOT NULL,
+  provider_message_id VARCHAR(255),
+  delivery_status VARCHAR(30) NOT NULL,
+  retry_count INT NOT NULL DEFAULT 0,
+  error_message TEXT,
+  simulated BOOLEAN DEFAULT false,
+  metadata JSONB,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS shipment_messages (
+  id SERIAL PRIMARY KEY,
+  shipment_id INT NOT NULL REFERENCES shipments(id) ON DELETE CASCADE,
+  sender_role VARCHAR(30) NOT NULL CHECK (sender_role IN ('sender', 'receiver', 'admin')),
+  sender_name VARCHAR(255) NOT NULL,
+  message_body TEXT NOT NULL,
+  is_read BOOLEAN NOT NULL DEFAULT false,
+  read_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Routes Table
 CREATE TABLE IF NOT EXISTS routes (
   id SERIAL PRIMARY KEY,
@@ -138,9 +189,14 @@ CREATE INDEX IF NOT EXISTS idx_shipments_driver ON shipments(driver_id);
 CREATE INDEX IF NOT EXISTS idx_shipments_tracking ON shipments(tracking_number);
 CREATE INDEX IF NOT EXISTS idx_gps_shipment ON gps_locations(shipment_id);
 CREATE INDEX IF NOT EXISTS idx_gps_shipment_time ON gps_locations(shipment_id, recorded_at);
+CREATE INDEX IF NOT EXISTS idx_iot_assignments_shipment_time ON iot_device_assignments(shipment_id, assigned_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_iot_assignments_active_device ON iot_device_assignments (LOWER(device_id)) WHERE unassigned_at IS NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_iot_assignments_active_shipment ON iot_device_assignments (shipment_id) WHERE unassigned_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_sensor_shipment ON sensor_data(shipment_id);
 CREATE INDEX IF NOT EXISTS idx_sensor_shipment_time ON sensor_data(shipment_id, recorded_at);
 CREATE INDEX IF NOT EXISTS idx_rfid_shipment_tag ON rfid_scans(shipment_id, rfid_tag_id);
 CREATE INDEX IF NOT EXISTS idx_alerts_shipment_resolved ON alerts(shipment_id, is_resolved);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications(user_id, is_read);
+CREATE INDEX IF NOT EXISTS idx_notification_logs_shipment_event ON notification_logs(shipment_id, event_type, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_shipment_messages_shipment_time ON shipment_messages(shipment_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_audit_entity ON audit_logs(entity_type, entity_id);

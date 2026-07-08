@@ -20,8 +20,11 @@ SoftwareSerial rfidSerial(RFID_RX_PIN, RFID_TX_PIN);
 TinyGPSPlus gps;
 
 // Tracking data
-String shipmentId = "SHIP-001";
-String deviceId = "DEVICE-001";
+// Set this to a REAL SmartTrack shipment tracking number created on the server PC,
+// for example: ST-1-UFYMX8. If it does not match a shipment in PostgreSQL,
+// the backend will respond with "Shipment not found".
+const char* TRACKING_NUMBER = "ST-1-UFYMX8";
+const char* DEVICE_ID = "DEVICE-001";
 
 struct SensorData {
   float temperature;
@@ -93,8 +96,8 @@ void sendDataToServer(SensorData data) {
   // Create JSON payload
   StaticJsonDocument<256> doc;
   
-  doc["shipmentId"] = shipmentId;
-  doc["deviceId"] = deviceId;
+  doc["shipmentId"] = TRACKING_NUMBER;
+  doc["deviceId"] = DEVICE_ID;
   doc["temperature"] = data.temperature;
   doc["humidity"] = data.humidity;
   doc["latitude"] = data.latitude;

@@ -3,6 +3,10 @@ import PropTypes from 'prop-types';
 import { Modal, Input, Button } from '../ui';
 import { apiFetch } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { TZ_REGIONS } from '../../utils/tanzaniaRegions';
+import { calculateShipmentPrice, formatTsh } from '../../utils/shipmentTicket';
+import { assignGpsDevice } from '../../utils/gpsDevice';
+import GpsDeviceAssignField from './GpsDeviceAssignField';
 
 const INITIAL_FORM = {
   sender_name: '',
@@ -14,10 +18,10 @@ const INITIAL_FORM = {
   weight: '',
   dimensions: '',
   contents: '',
-  status: 'pending',
-  latitude: '',
-  longitude: ''
+  gps_device_id: '',
 };
+
+const REGION_OPTIONS = Object.values(TZ_REGIONS);
 
 const CreateShipmentModal = ({ isOpen, onClose, onCreated, onTicketReady }) => {
   const [form, setForm] = useState(INITIAL_FORM);
@@ -28,6 +32,7 @@ const CreateShipmentModal = ({ isOpen, onClose, onCreated, onTicketReady }) => {
   const [error, setError] = useState('');
   const [copyHint, setCopyHint] = useState('');
   const { user } = useAuth();
+  const priceLabel = formatTsh(calculateShipmentPrice(form.weight));
 
   const fetchTrackingId = useCallback(async () => {
     setLoadingTrackingId(true);
@@ -98,12 +103,9 @@ const CreateShipmentModal = ({ isOpen, onClose, onCreated, onTicketReady }) => {
         origin_location: form.origin_location,
         destination_location: form.destination_location,
         recipient_phone: form.recipient_phone.trim() || null,
-        status: form.status,
         weight: form.weight ? parseFloat(form.weight) : null,
         dimensions: form.dimensions || null,
-        contents: form.contents || null,
-        latitude: form.latitude ? parseFloat(form.latitude) : null,
-        longitude: form.longitude ? parseFloat(form.longitude) : null
+        contents: form.contents || null
       };
 
       const shipment = await apiFetch('/api/shipments', {
@@ -111,8 +113,18 @@ const CreateShipmentModal = ({ isOpen, onClose, onCreated, onTicketReady }) => {
         body: JSON.stringify(payload)
       });
 
+      const deviceId = form.gps_device_id.trim();
+      let assignment = null;
+      if (deviceId) {
+        assignment = await assignGpsDevice({
+          deviceId,
+          trackingNumber: shipment.tracking_number,
+        });
+      }
+
       const enriched = {
         ...shipment,
+        assignedDeviceId: assignment?.data?.deviceId || deviceId || shipment.assignedDeviceId || null,
         sender_name: form.sender_name.trim() || shipment.sender_name,
         recipient_name: form.recipient_name.trim() || shipment.recipient_name,
         sender_phone: form.sender_phone.trim() || shipment.sender_phone || user?.phone,
@@ -203,20 +215,40 @@ const CreateShipmentModal = ({ isOpen, onClose, onCreated, onTicketReady }) => {
           />
         </div>
 
-        <Input
-          label="Origin"
-          value={form.origin_location}
-          onChange={updateField('origin_location')}
-          placeholder="Dar es Salaam, Tanzania"
-          required
-        />
-        <Input
-          label="Destination"
-          value={form.destination_location}
-          onChange={updateField('destination_location')}
-          placeholder="Dodoma, Tanzania"
-          required
-        />
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-semibold text-[var(--tw-text)] mb-2">Origin region</label>
+            <select
+              value={form.origin_location}
+              onChange={updateField('origin_location')}
+              className="w-full px-4 py-2.5 border border-[var(--tw-border2)] rounded-lg bg-[var(--tw-surface)] text-[var(--tw-text)] focus:outline-none focus:ring-2 focus:ring-[var(--tw-accent)]"
+              required
+            >
+              <option value="">Select origin region</option>
+              {REGION_OPTIONS.map((region) => (
+                <option key={region.code} value={region.name}>
+                  {region.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-[var(--tw-text)] mb-2">Destination region</label>
+            <select
+              value={form.destination_location}
+              onChange={updateField('destination_location')}
+              className="w-full px-4 py-2.5 border border-[var(--tw-border2)] rounded-lg bg-[var(--tw-surface)] text-[var(--tw-text)] focus:outline-none focus:ring-2 focus:ring-[var(--tw-accent)]"
+              required
+            >
+              <option value="">Select destination region</option>
+              {REGION_OPTIONS.map((region) => (
+                <option key={region.code} value={region.name}>
+                  {region.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
         <div className="grid grid-cols-2 gap-4">
           <Input
             label="Recipient phone"
@@ -250,43 +282,23 @@ const CreateShipmentModal = ({ isOpen, onClose, onCreated, onTicketReady }) => {
             placeholder="40x30x20 cm"
           />
         </div>
+        <div className="rounded-lg border border-[var(--tw-border)] bg-[var(--tw-surface2)] p-3">
+          <p className="text-xs font-bold uppercase tracking-wide text-[var(--tw-muted)] mb-1">
+            Price
+          </p>
+          <p className="text-lg font-bold text-[var(--tw-text)]">{priceLabel}</p>
+        </div>
         <Input
           label="Contents"
           value={form.contents}
           onChange={updateField('contents')}
           placeholder="Electronics, documents, etc."
         />
-        <div>
-          <label className="block text-sm font-semibold text-[var(--tw-text)] mb-2">Status</label>
-          <select
-            value={form.status}
-            onChange={updateField('status')}
-            className="w-full px-4 py-2.5 border border-[var(--tw-border2)] rounded-lg bg-[var(--tw-surface)] text-[var(--tw-text)] focus:outline-none focus:ring-2 focus:ring-[var(--tw-accent)]"
-          >
-            <option value="pending">Pending</option>
-            <option value="in_transit">In Transit</option>
-            <option value="delivered">Delivered</option>
-            <option value="failed">Failed</option>
-          </select>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <Input
-            label="Latitude (optional)"
-            type="number"
-            step="any"
-            value={form.latitude}
-            onChange={updateField('latitude')}
-            placeholder="-6.7924"
-          />
-          <Input
-            label="Longitude (optional)"
-            type="number"
-            step="any"
-            value={form.longitude}
-            onChange={updateField('longitude')}
-            placeholder="39.2083"
-          />
-        </div>
+        <GpsDeviceAssignField
+          value={form.gps_device_id}
+          onChange={updateField('gps_device_id')}
+          hint="Optional. Must match the ESP device_id (e.g. tracker-001)."
+        />
         {error && <p className="text-sm text-red-600">{error}</p>}
       </form>
     </Modal>

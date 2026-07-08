@@ -1,5 +1,7 @@
 import QRCode from 'qrcode';
 
+const TICKET_PRICE_PER_KG = 3000;
+
 function escapeHtml(value) {
   if (value == null) return '';
   return String(value)
@@ -108,14 +110,30 @@ export async function getShipmentQrDataUrl(url) {
   });
 }
 
+export function calculateShipmentPrice(weight) {
+  const numericWeight = Number(weight);
+  if (!Number.isFinite(numericWeight) || numericWeight <= 0) {
+    return null;
+  }
+
+  return Math.round(numericWeight * TICKET_PRICE_PER_KG);
+}
+
+export function formatTsh(amount) {
+  if (!Number.isFinite(amount)) return '—';
+  return `${amount.toLocaleString('en-US')} Tsh`;
+}
+
+export function getTicketPricePerKg() {
+  return TICKET_PRICE_PER_KG;
+}
+
 export async function buildShipmentTicketsHtml(shipment, qrDataUrl) {
   const tracking = escapeHtml(shipment.tracking_number);
   const origin = escapeHtml(shipment.origin_location);
   const dest = escapeHtml(shipment.destination_location);
   const contents = escapeHtml(shipment.contents || '—');
-  const weight = shipment.weight != null ? `${shipment.weight} kg` : '—';
-  const dimensions = escapeHtml(shipment.dimensions || '—');
-  const status = escapeHtml((shipment.status || '').replace('_', ' '));
+  const price = formatTsh(calculateShipmentPrice(shipment.weight));
   const senderName = escapeHtml(shipment.sender_name || '—');
   const recipientName = escapeHtml(shipment.recipient_name || '—');
   const recipientPhone = escapeHtml(shipment.recipient_phone || '—');
@@ -162,9 +180,7 @@ export async function buildShipmentTicketsHtml(shipment, qrDataUrl) {
       </div>
 
       <div class="route">${origin} → ${dest}</div>
-      <div class="row"><span class="label">Status</span><span class="value">${status}</span></div>
-      <div class="row"><span class="label">Weight</span><span class="value">${escapeHtml(weight)}</span></div>
-      <div class="row"><span class="label">Dimensions</span><span class="value">${dimensions}</span></div>
+      <div class="row"><span class="label">Price</span><span class="value">${escapeHtml(price)}</span></div>
       <div class="row"><span class="label">Contents</span><span class="value">${contents}</span></div>
       ${trackUrl ? `<div class="url">Track online: ${trackUrl}</div>` : ''}
     </div>

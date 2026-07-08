@@ -31,8 +31,7 @@ src/
 │   ├── ui/              # Reusable UI components (10)
 │   ├── features/        # Feature-specific components (6)
 │   ├── common/          # Shared utilities (3)
-│   └── layout/          # Layout wrappers
-├── pages/               # Page components (2)
+│   └── layout/          # Layout wrappers├── pages/               # Page components (2)
 ├── utils/               # Helper functions (2)
 ├── styles/              # Stylesheets (3)
 ├── hooks/               # Custom hooks (ready)

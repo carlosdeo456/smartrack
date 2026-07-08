@@ -7,11 +7,19 @@ const TOKEN_KEY = 'smartrack_token';
 const USER_KEY = 'smartrack_user';
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem(USER_KEY);
-    return saved ? JSON.parse(saved) : null;
-  });
   const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY));
+  const [user, setUser] = useState(() => {
+    const savedToken = localStorage.getItem(TOKEN_KEY);
+    const savedUser = localStorage.getItem(USER_KEY);
+    if (!savedToken || !savedUser) return null;
+
+    try {
+      return JSON.parse(savedUser);
+    } catch {
+      localStorage.removeItem(USER_KEY);
+      return null;
+    }
+  });
   const [loading, setLoading] = useState(!!localStorage.getItem(TOKEN_KEY));
 
   const saveSession = useCallback((newToken, newUser) => {
@@ -64,6 +72,8 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     if (!token) {
+      localStorage.removeItem(USER_KEY);
+      setUser(null);
       setLoading(false);
       return;
     }
@@ -92,7 +102,7 @@ export const AuthProvider = ({ children }) => {
   }, [token, clearSession]);
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, logout, isAuthenticated: !!token && !!user }}>
       {children}
     </AuthContext.Provider>
   );

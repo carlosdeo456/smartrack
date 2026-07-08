@@ -31,13 +31,13 @@ const Header = ({ title = 'SmartTrack', subtitle = 'Real-time Parcel Tracking' }
         <Link to="/map" className={`topbar-nav-link ${location.pathname === '/map' ? 'active' : ''}`}>
           Live Map
         </Link>
-        <Link to="/track" className={`topbar-nav-link ${location.pathname.startsWith('/track') ? 'active' : ''}`}>
+        <Link to="/map" className={`topbar-nav-link ${location.pathname === '/map' ? 'active' : ''}`}>
           Track
         </Link>
       </nav>
 
       <div className="topbar-right">
-        <Link to="/track" className="icon-btn" title="Track parcel">
+        <Link to="/map" className="icon-btn" title="Track parcel">
           <i className="fas fa-search" />
         </Link>
         <Link to="/map" className="icon-btn" title="Live Map">

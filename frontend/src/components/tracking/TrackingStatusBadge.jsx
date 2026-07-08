@@ -2,10 +2,13 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 const LABELS = {
-  pending: 'Processing',
+  pending: 'Pending',
+  dispatched: 'Dispatched',
   in_transit: 'In transit',
+  out_for_delivery: 'Out for delivery',
   delivered: 'Delivered',
   failed: 'Exception',
+  delayed: 'Delayed',
 };
 
 const TrackingStatusBadge = ({ status, live }) => {
