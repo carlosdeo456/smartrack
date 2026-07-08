@@ -1,8 +1,7 @@
 const { Pool } = require('pg');
+const { getPoolConfig } = require('./poolConfig');
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL
-});
+const pool = new Pool(getPoolConfig());
 
 pool.on('error', (err) => {
   console.error('Unexpected database error:', err.message);

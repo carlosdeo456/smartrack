@@ -2,6 +2,7 @@ require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const { Pool } = require('pg');
+const { getPoolConfig } = require('../src/config/poolConfig');
 
 async function migrate() {
   if (!process.env.DATABASE_URL) {
@@ -11,7 +12,7 @@ async function migrate() {
 
   const schemaPath = path.join(__dirname, '../../database/schema.sql');
   const sql = fs.readFileSync(schemaPath, 'utf8');
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  const pool = new Pool(getPoolConfig());
 
   try {
     await pool.query(sql);

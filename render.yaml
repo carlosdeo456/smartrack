@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: smartrack-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: smartrack-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRE
+        value: 7d
+      - key: CORS_ORIGINS
+        value: https://smartrack-uxeb.vercel.app
+      - key: CORS_ORIGIN
+        value: https://smartrack-uxeb.vercel.app
+      - key: CORS_ALLOW_ALL
+        value: false
+      - key: ENABLE_SIMULATED_GPS
+        value: false
+
+databases:
+  - name: smartrack-db
+    databaseName: smartrack
+    plan: free

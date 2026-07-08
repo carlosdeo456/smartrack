@@ -33,6 +33,17 @@ app.use((req, res, next) => {
 });
 
 // Health check — use from any client to verify LAN connectivity
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      service: 'smartrack-api',
+      message: 'Backend API is running. Open the Vercel web app for the dashboard UI.',
+      health: '/health',
+    },
+  });
+});
+
 app.get('/health', async (req, res) => {
   let db = 'disconnected';
 

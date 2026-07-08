@@ -1,5 +1,6 @@
 require('dotenv').config();
 const { Pool } = require('pg');
+const { getPoolConfig } = require('../src/config/poolConfig');
 
 const SQL = `
 CREATE TABLE IF NOT EXISTS iot_device_assignments (
@@ -29,7 +30,7 @@ async function migrate() {
     process.exit(1);
   }
 
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  const pool = new Pool(getPoolConfig());
   try {
     await pool.query(SQL);
     console.log('iot_device_assignments table ready.');
