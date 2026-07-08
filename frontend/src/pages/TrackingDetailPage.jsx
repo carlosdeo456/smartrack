@@ -6,6 +6,7 @@ import { SensorMonitor } from '../components/features';
 import { useNotification } from '../components/common';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { useLiveTracking } from '../hooks/useLiveTracking';
+import { API_URL } from '../utils/apiConfig';
 
 const TrackingDetailPage = () => {
   const { id } = useParams();
@@ -35,7 +36,7 @@ const TrackingDetailPage = () => {
   const fetchSensorData = async (shipmentId) => {
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/shipments/${shipmentId}/sensors`
+        `${API_URL}/api/shipments/${shipmentId}/sensors`
       );
       if (response.ok) {
         setSensorData(await response.json());
@@ -49,7 +50,7 @@ const TrackingDetailPage = () => {
     setLoading(true);
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/shipments/${id}`
+        `${API_URL}/api/shipments/${id}`
       );
       if (response.ok) {
         const data = await response.json();

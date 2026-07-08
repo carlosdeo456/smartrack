@@ -9,7 +9,7 @@ import { TZ_DEFAULT_CENTER } from '../../utils/tanzaniaRegions';
 import AnimatedVehicleMarker from '../map/AnimatedVehicleMarker';
 import { getBearing } from '../map/vehicleMarker';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+import { API_URL } from '../../utils/apiConfig';
 const MAP_TILES = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 const MAP_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
 const MINT = '#34D399';

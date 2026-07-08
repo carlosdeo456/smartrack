@@ -5,7 +5,7 @@ import { useLiveTracking } from '../hooks/useLiveTracking';
 import { BreadcrumbNav } from '../components/common';
 import { Button } from '../components/ui';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+import { API_URL } from '../utils/apiConfig';
 
 const LiveMapPage = () => {
   const [shipments, setShipments] = useState([]);

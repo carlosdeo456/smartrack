@@ -7,7 +7,7 @@ import { useLiveTracking } from '../hooks/useLiveTracking';
 import { normalizeTrackingNumber } from '../utils/tracking';
 import { Spinner } from '../components/ui';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+import { API_URL } from '../utils/apiConfig';
 
 function isLocationNewer(nextLocation, currentLocation) {
   const nextTs = nextLocation?.recordedAt ? new Date(nextLocation.recordedAt).getTime() : 0;

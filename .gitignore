@@ -8,3 +8,6 @@ build/
 *.log
 uploads/
 .cache
+.vercel
+.firebase
+.env*

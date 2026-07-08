@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
 import { SOCKET_EVENTS } from '../utils/constants';
 
-const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'http://localhost:5000';
+import { SOCKET_URL } from '../utils/apiConfig';
 
 /**
  * Subscribes to real-time shipment location, sensor, and alert events via Socket.io.

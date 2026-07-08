@@ -7,7 +7,7 @@ import PropTypes from 'prop-types';
  * Set REACT_APP_API_URL in frontend/.env to your backend LAN IP:
  *   REACT_APP_API_URL=http://192.168.1.10:5000
  */
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+import { API_URL as API_BASE } from '../../utils/apiConfig';
 const ITEMS_URL = `${API_BASE}/api/v1/items`;
 
 const ItemsList = ({ apiBaseUrl }) => {

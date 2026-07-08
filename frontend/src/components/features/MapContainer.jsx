@@ -20,7 +20,7 @@ import { LIVE_AERIAL_ZOOM, LIVE_STREET_ZOOM } from '../../utils/mapTiles';
 
 import { TZ_DEFAULT_CENTER } from '../../utils/tanzaniaRegions';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+import { API_URL } from '../../utils/apiConfig';
 const DEFAULT_CENTER = TZ_DEFAULT_CENTER;
 const MINT = '#34D399';
 const MINT_DARK = '#10B981';

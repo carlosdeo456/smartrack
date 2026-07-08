@@ -10,7 +10,7 @@ import { apiFetch } from '../services/api';
 
 import { regionLabel } from '../utils/tanzaniaRegions';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+import { API_URL } from '../utils/apiConfig';
 
 function routeKey(s) {
   return `${s.origin_location} → ${s.destination_location}`;
