@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { API_URL, getApiErrorMessage } from '../utils/apiConfig';
 
 const AuthContext = createContext(null);
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 const TOKEN_KEY = 'smartrack_token';
 const USER_KEY = 'smartrack_user';
 
@@ -45,7 +44,7 @@ export const AuthProvider = ({ children }) => {
 
     const data = await response.json();
     if (!response.ok) {
-      throw new Error(data.error || 'Login failed');
+      throw new Error(getApiErrorMessage(data, 'Login failed'));
     }
 
     saveSession(data.token, data.user);
@@ -61,7 +60,7 @@ export const AuthProvider = ({ children }) => {
 
     const data = await response.json();
     if (!response.ok) {
-      throw new Error(data.error || 'Registration failed');
+      throw new Error(getApiErrorMessage(data, 'Registration failed'));
     }
 
     saveSession(data.token, data.user);
