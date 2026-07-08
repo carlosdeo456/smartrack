@@ -16,6 +16,7 @@
     "migrate:items": "node database/migrate-items.js",
     "migrate:iot": "node database/migrate-iot-assignments.js",
     "migrate:gps-source": "node database/migrate-gps-source.js",
+    "setup:cloud": "node database/migrate.js && node database/migrate-iot-assignments.js && node database/migrate-gps-source.js && node database/migrate-items.js && node database/seed-users.js",
     "test": "jest"
   },
   "keywords": [
