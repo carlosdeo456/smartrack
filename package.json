@@ -18,7 +18,8 @@
     "seed:tanzania": "npm run seed:tanzania --prefix backend",
     "install:all": "npm install --prefix backend && npm install --prefix frontend",
     "build:frontend": "npm run build --prefix frontend",
-    "deploy:firebase": "npm run build:frontend && npx firebase deploy --only hosting"
+    "deploy:firebase": "npm run build:frontend && npx firebase deploy --only hosting",
+    "tunnel:permanent": "powershell -ExecutionPolicy Bypass -File scripts/setup-permanent-tunnel.ps1"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",

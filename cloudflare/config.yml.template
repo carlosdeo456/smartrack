@@ -1,0 +1,11 @@
+# Cloudflare Named Tunnel — permanent public API URL
+# Copy to: %USERPROFILE%\.cloudflared\config.yml
+# Replace TUNNEL_ID and api.yourdomain.com after running scripts/setup-permanent-tunnel.ps1
+
+tunnel: REPLACE_TUNNEL_ID
+credentials-file: REPLACE_CREDENTIALS_PATH
+
+ingress:
+  - hostname: api.yourdomain.com
+    service: http://localhost:5000
+  - service: http_status:404

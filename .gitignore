@@ -10,4 +10,5 @@ uploads/
 .cache
 .vercel
 .firebase
+PERMANENT_API_URL.txt
 .env*
