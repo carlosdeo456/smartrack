@@ -11,8 +11,8 @@ Developer A runs the **backend API** and shares a public URL. You do **not** nee
 Your machine (Developer B)          Developer A's server PC
 ┌─────────────────────┐             ┌─────────────────────┐
 │  TanzaParcel        │   HTTPS     │  smartrack backend  │
-│  flutter build apk  │ ──────────► │  PostgreSQL         │
-└─────────────────────┘             │  + Cloudflare tunnel│
+│  flutter build apk  │ ──────────► │  PostgreSQL (Neon)  │
+└─────────────────────┘             │  Render (cloud API) │
                                     └─────────────────────┘
 
 Phones (any network) install APK → call same public API URL as the web app.
@@ -26,13 +26,13 @@ Ask Developer A for the **current public API URL**. It must be HTTPS and reachab
 
 | Item | Current value (update when A says so) |
 |------|----------------------------------------|
-| **API base URL** | `https://lay-drugs-sterling-shame.trycloudflare.com` |
-| **Health check** | `https://lay-drugs-sterling-shame.trycloudflare.com/health` |
+| **API base URL** | `https://smartrack-api.onrender.com` |
+| **Health check** | `https://smartrack-api.onrender.com/health` |
 | **Web app** | https://smartrack-806fb.web.app |
 | **Test login** | `admin@smartrack.com` / `admin123` |
 
 **Before you test or build**, open the health URL in a browser. You should see JSON with `"db":"connected"`.  
-If it fails, Developer A must start `npm run dev` and the Cloudflare tunnel on their PC.
+If it fails, Developer A must check Render dashboard or redeploy — see `docs/RENDER_DEPLOY.md`.
 
 ---
 
@@ -79,7 +79,7 @@ Use Developer A's **public API URL**:
 
 ```bash
 cd TanzaParcel
-flutter run --dart-define=API_BASE_URL=https://lay-drugs-sterling-shame.trycloudflare.com
+flutter run --dart-define=API_BASE_URL=https://smartrack-api.onrender.com
 ```
 
 ### Same office Wi‑Fi as Developer A (LAN test only)
@@ -103,7 +103,7 @@ flutter run --dart-define=API_BASE_URL=http://10.0.2.2:5000
 ```bash
 cd TanzaParcel
 flutter build apk --release \
-  --dart-define=API_BASE_URL=https://lay-drugs-sterling-shame.trycloudflare.com
+  --dart-define=API_BASE_URL=https://smartrack-api.onrender.com
 ```
 
 Output:
@@ -112,7 +112,7 @@ Output:
 build/app/outputs/flutter-apk/app-release.apk
 ```
 
-When Developer A changes the tunnel URL, **rebuild** with the new `API_BASE_URL`.
+This URL is **permanent** (Render). Rebuild only if Developer A changes the service name or domain.
 
 ---
 
