@@ -45,6 +45,16 @@ function isHostedFrontendOrigin(origin) {
 function corsOptions() {
   const allowedOrigins = buildAllowedOrigins();
 
+  // Render sets RENDER=true automatically — allow browser clients without manual CORS_ORIGINS
+  if (process.env.RENDER === 'true') {
+    return {
+      origin: true,
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+      credentials: true,
+    };
+  }
+
   // Dev-only wildcard — never enable in production
   if (CORS_ALLOW_ALL && !isProduction) {
     return {
