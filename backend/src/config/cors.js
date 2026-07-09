@@ -45,8 +45,8 @@ function isHostedFrontendOrigin(origin) {
 function corsOptions() {
   const allowedOrigins = buildAllowedOrigins();
 
-  // Render sets RENDER=true automatically — allow browser clients without manual CORS_ORIGINS
-  if (process.env.RENDER === 'true') {
+  // Cloud hosts (Render, etc.) — allow all browser origins so Firebase/Vercel always work
+  if (isProduction) {
     return {
       origin: true,
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -55,7 +55,7 @@ function corsOptions() {
     };
   }
 
-  // Dev-only wildcard — never enable in production
+  // Dev-only wildcard
   if (CORS_ALLOW_ALL && !isProduction) {
     return {
       origin: true,

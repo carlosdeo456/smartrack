@@ -18,9 +18,12 @@
     "seed:tanzania": "npm run seed:tanzania --prefix backend",
     "install:all": "npm install --prefix backend && npm install --prefix frontend",
     "build:frontend": "npm run build --prefix frontend",
+    "start": "npm start --prefix backend",
+    "postinstall": "npm install --prefix backend",
     "deploy:firebase": "npm run build:frontend && npx firebase deploy --only hosting",
     "tunnel:permanent": "powershell -ExecutionPolicy Bypass -File scripts/setup-permanent-tunnel.ps1",
-    "mobile:distribute": "powershell -ExecutionPolicy Bypass -File scripts/distribute-android-apk.ps1"
+    "mobile:distribute": "powershell -ExecutionPolicy Bypass -File scripts/distribute-android-apk.ps1",
+    "deploy:fly": "fly deploy"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",

@@ -1,6 +1,5 @@
-# Render free web service + Neon PostgreSQL (no Render DB = no payment prompt for DB)
-# Fixed URL: https://smartrack-api.onrender.com
-# See docs/RENDER_DEPLOY.md
+# Force Render to use GitHub repo + Neon (not Render Postgres)
+# After push: Render Dashboard → Blueprints → Sync
 
 services:
   - type: web
@@ -11,11 +10,14 @@ services:
     buildCommand: npm install
     startCommand: npm start
     healthCheckPath: /health
+    autoDeploy: true
     envVars:
       - key: NODE_ENV
         value: production
       - key: HOST
         value: 0.0.0.0
+      - key: PORT
+        value: 5000
       - key: DATABASE_URL
         sync: false
       - key: JWT_SECRET
